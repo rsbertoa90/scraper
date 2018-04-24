@@ -1,0 +1,162 @@
+*{
+  box-sizing: border-box;
+}
+
+ul,li,ol,a{
+  text-decoration: none;
+  list-style: none;
+  margin: none;
+  padding: none;
+  text-decoration: none;
+}
+main{
+  width: 100%;
+  padding: 15px;
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.align-self-start{
+  align-self: start;
+}
+menu ul li{
+  padding: 10px;
+  border: 1px solid #fb0d0d ;
+}
+menu ul li a{
+  margin-top: 10px;
+  font-size: 1.5em;
+}
+
+
+/* navbar */
+.navbar{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(24, 94, 36);
+  padding: 20px;
+  color: white;
+
+  display: flex;
+  justify-content: space-between;
+}
+.brand{
+  margin-left: 15px;
+}
+.links{
+  margin-right: 15px;
+}
+.links a, .brand a{
+  font-size: 1.5em;
+  color: white;
+}
+
+/*FORMS*/
+.navbar form{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.form-block{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid black;
+}
+button,select, input{
+  background-color: #6997a7;
+  color: white;
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+.numberInput{
+  width: 50px;
+}
+
+.form-block span{
+  font-size: 1.5em;
+}
+.form-block label{
+  font-size: 1.3em;
+}
+
+.error-message
+{
+  color:red;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 2em;
+}
+.tabla{
+  font-size: 1.3em;
+  margin-top: 50px;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+table {
+  font-size: 1.2em;
+}
+
+td a{
+  color: black;
+  text-decoration: none;
+}
+
+td a:hover{
+  color: blue;
+}
+.fila{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+.celda{
+  text-align: center;
+  border: 1px solid black;
+}
+.text-red{color:red;}
+.text-blue{color:blue;}
+.text-white{color:white;}
+.disabled{background-color: #1deb46;}
+.enabled{background-color: #ff0808;}
+table td {
+   border: 1px solid black;
+   font-weight: normal;
+}
+table th {
+   border: 1px solid black;
+   font-weight: bold;
+   background-color: #6997a7;
+   color: white;
+}
+
+@media (min-width:768px) {
+
+  main{grid-area:main;}
+  menu{grid-area:menu;}
+  header{grid-area: header;}
+  footer{grid-area:footer}
+
+  body{
+    max-width: 1400px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(4,25%);
+    grid-template-areas:
+    'header header header header'
+    'menu main main main'
+    'menu footer footer footer';
+  }
+  menu{display: flex;
+    justify-content: flex-start;
+  padding: 0;}
+  menu ul{margin:0; padding: 0;}
+
+}
