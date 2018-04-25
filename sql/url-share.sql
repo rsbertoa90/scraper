@@ -1,12 +1,16 @@
 use scraper;
 
-update scrapes as s
-left join (select product_id,url from scrapes where url is not null ) as a on s.product_id=a.product_id
-set s.url = a.url, s.subcategoria = a.subcategoria
-where s.product_id = a.product_id;
+SET SQL_SAFE_UPDATES = 0;
+UPDATE scrapes AS s
+LEFT JOIN (SELECT DISTINCT product_id,url,subcategoria_id FROM scrapes WHERE url IS NOT NULL ) AS a 
+ON s.product_id = a.product_id
+SET s.url = a.url, s.subcategoria_id = a.subcategoria_id
+WHERE s.product_id = a.product_id;
+SET SQL_SAFE_UPDATES = 1;
 
 
-
+select * from scrapes where url is null
+AND categoria_id = 2;
 
 
 use scraper;

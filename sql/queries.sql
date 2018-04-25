@@ -128,9 +128,9 @@ ORDER BY  dinero_movido desc
 limit 30;
 
 select * from categorias;
+select * from scrapes order by data_date desc;
 
-
-update  scrapes
+update  scrapesa
 set categoria_id = 1
 where categoria_id = 7;
 
@@ -156,3 +156,8 @@ AND price BETWEEN 1 AND 99999
 GROUP BY product_id HAVING COUNT(product_id) > 1
 ORDER BY  dinero_movido desc
 limit 30;
+
+use scraper;
+-- asdasdasd
+SELECT product_id, c.name AS categoria, title AS titulo, price AS precio, location AS localidad, DATE_FORMAT(MIN(data_date), "%d / %m / %Y") as inicio_periodo, DATE_FORMAT(MAX(data_date), "%d / %m / %Y") as fin_periodo, MAX(sells) - MIN(sells) AS ventas_en_periodo, CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date))," dias") AS periodo_en_dias, (MAX(sells) - MIN(sells)) * price AS dinero_movido FROM scrapes AS s INNER JOIN categorias AS c ON s.categoria_id = c.id GROUP BY product_id HAVING COUNT(product_id) > 1 ORDER BY dinero_movido desc limit 10;
+

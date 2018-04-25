@@ -2,6 +2,13 @@
   box-sizing: border-box;
 }
 
+menu ul li a{
+  color:black;
+}
+menu ul li a:hover{
+  color:blue;
+}
+
 ul,li,ol,a{
   text-decoration: none;
   list-style: none;
@@ -9,6 +16,7 @@ ul,li,ol,a{
   padding: none;
   text-decoration: none;
 }
+
 main{
   width: 100%;
   padding: 15px;
@@ -21,13 +29,17 @@ main{
 .align-self-start{
   align-self: start;
 }
-menu ul li{
+.menu-item{
   padding: 10px;
   border: 1px solid #fb0d0d ;
 }
-menu ul li a{
+.menu-item:a{
+  color:blue;
+}
+.menu-item a{
   margin-top: 10px;
   font-size: 1.5em;
+  color: black;
 }
 
 
@@ -121,8 +133,10 @@ td a:hover{
   text-align: center;
   border: 1px solid black;
 }
+
 .text-red{color:red;}
 .text-blue{color:blue;}
+
 .text-white{color:white;}
 .disabled{background-color: #1deb46;}
 .enabled{background-color: #ff0808;}
