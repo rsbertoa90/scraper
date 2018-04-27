@@ -49,14 +49,14 @@ if (isset($_GET["share"])){
     </div>
 
     <form class="" action="import.php" method="post" enctype="multipart/form-data">
-      <div class="form-block">
+      <!-- <div class="form-block">
         <select name="categoria">
           <option value="NULL"> Elige una categoria </option>
           <?php foreach ($categorias as $categoria): ?>
             <option value="<?=$categoria["id"]?>"> <?=$categoria["name"]?> </option>
           <?php endforeach; ?>
         </select>
-      </div>
+      </div> -->
 
       <div class="form-block">
         <span>SUBIR ARCHIVO</span>

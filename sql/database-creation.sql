@@ -1,39 +1,46 @@
--- CREATE DATABASE scraper;
-use scraper;
-truncate scrapes;
 
-drop table scrapes;
-drop table categorias;
+CREATE DATABASE scraper
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
+  
+use scraper;
 
 
 CREATE TABLE categorias (
-id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-name VARCHAR (50) UNIQUE,
-created_at TIMESTAMP DEFAULT NOW()
-);
+  id int(6) unsigned NOT NULL AUTO_INCREMENT,
+  name varchar(50) NOT NULL UNIQUE,
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=12 ;
 
 
+CREATE TABLE subcategorias (
+  id int(6) unsigned NOT NULL AUTO_INCREMENT,
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  categoria_id int(6) unsigned DEFAULT NULL,
+  name varchar(100) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY name_categoria (name,categoria_id),
+  KEY categoria_id (categoria_id),
+  CONSTRAINT subcategorias_ibfk_1 FOREIGN KEY (categoria_id) REFERENCES categorias (id)
+) ENGINE=InnoDB AUTO_INCREMENT=118 ;
 
-INSERT INTO categorias (name) VALUES ('Ropa de cama');
-INSERT INTO categorias (name) VALUES ('Cortinas');
-INSERT INTO categorias (name) VALUES ('Mates');
-INSERT INTO categorias (name) VALUES ('Baterias de cocina');
--- select * from categorias;
+CREATE TABLE scrapes (
+  id int(15) unsigned NOT NULL AUTO_INCREMENT,
+  data_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  categoria_id int(15) unsigned DEFAULT NULL,
+  product_id varchar(100) NOT NULL,
+  title varchar(150) NOT NULL,
+  price decimal(9,2) NOT NULL,
+  sells int(7) unsigned DEFAULT NULL,
+  location varchar(100) DEFAULT NULL,
+  url varchar(400) DEFAULT NULL,
+  subcategoria_id int(6) unsigned DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY categoria_id (categoria_id),
+  KEY subcategoria_id (subcategoria_id),
+  CONSTRAINT scrapes_ibfk_1 FOREIGN KEY (categoria_id) REFERENCES categorias (id),
+  CONSTRAINT scrapes_ibfk_2 FOREIGN KEY (subcategoria_id) REFERENCES subcategorias (id)
+) ENGINE=InnoDB AUTO_INCREMENT=351720;
 
-CREATE TABLE scrapes(
-id INT(15) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-data_date TIMESTAMP DEFAULT NOW(),
-categoria_id  INT(15) UNSIGNED,
-subcategoria varchar(100) ,
-product_id varchar(100) NOT NULL, 
-title varchar(150) NOT NULL,
-price DECIMAL(9,2) NOT NULL,
-sells INT(7) UNSIGNED,
-location varchar(100),
-
-FOREIGN KEY(categoria_id) REFERENCES categorias(id)
-
-);
-
-
-
+ 

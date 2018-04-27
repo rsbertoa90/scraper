@@ -6,10 +6,12 @@ $categorias = categorias();
 $totalScrapes = totalScrapes($categorias);
 
 $mensajes["categoria"]="";
+
 if ($_POST){
-  $newCat = trim($_POST["categoria"]);
-  if(!trim($newCat)){
-    $mensajes["categoria"]="Error - el campo esta vacio";
+  $newCat["name"] = trim($_POST["categoria"]);
+  $newCat["start_url"] = trim($_POST["start_url"]);
+  if(!trim($newCat["name"]) || !trim($newCat["start_url"])){
+    $mensajes["categoria"]="Error - Los campos no pueden estar vacios";
   }else{
     $mensajes["categroia"]=nuevaCategoria($newCat);
     if(!$mensajes["categoria"]){
@@ -50,10 +52,18 @@ if(isset($_GET["m"])){
       <h3>  <span class="error-message"><?=$mensajes['categoria']?></span> </h3>
       <div class="tabla">
         <table>
+          <tr>
+            <th>NOMBRE</th>
+            <th>START_URL</th>
+            <th> - </th>
+          </tr>
           <?php foreach ($categorias as $categoria): ?>
             <tr>
               <td>
                 <?=$categoria["name"]?>
+              </td>
+              <td>
+                <a href="<?=$categoria["start_url"]?>"> <?=$categoria["start_url"]?></a>
               </td>
               <td>
                 <a href="categorias.php?action=borrar&id=<?=$categoria['id']?>" >[borrar]</a> </li>
@@ -68,7 +78,10 @@ if(isset($_GET["m"])){
         <h3>AGREGAR NUEVA CATEGORIA</h3>
         <form class="" action="categorias.php" method="post">
           <div class="">
-            <input type="text" name="categoria" >
+            <input type="text" name="categoria" placeholder="NOMBRE" >
+          </div>
+          <div class="">
+            <input type="text" name="start_url" placeholder="START_URL">
           </div>
           <button type="submit">ACEPTAR</button>
         </form>

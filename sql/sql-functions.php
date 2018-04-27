@@ -3,7 +3,7 @@
 function connect(){
   $dsn='mysql:host=localhost;dbname=scraper;charset=utf8;port:3306';
   $dbuser='root';
-  $dbpass='rodrigo';
+  $dbpass='';
   $opt = [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION ];
   try {
       $db = new PDO($dsn,$dbuser,$dbpass, $opt);
@@ -40,14 +40,14 @@ function existeCategoria($categoria){
 // hace un insert de nueva categoria en la tabla categorias
 function insertCategoria($categoria){
   $DB = connect();
-  $queryText='INSERT INTO categorias(name) VALUES (:categoria)';
+  $queryText='INSERT INTO categorias(name,start_url) VALUES (:categoria,:url)';
   try {
     $DB->beginTransaction();
 
     $query = $DB->prepare($queryText);
-    $query->bindValue(':categoria',$categoria,PDO::PARAM_STR);
+    $query->bindValue(':categoria',$categoria["name"],PDO::PARAM_STR);
+    $query->bindValue(':url',$categoria["start_url"],PDO::PARAM_STR);
     $query->execute();
-
     $DB->commit();
   } catch (PDOException $e) {
     return $e->getMessage();
@@ -57,8 +57,7 @@ function insertCategoria($categoria){
 
 // verifica si existe la categoria. Si no existe, la inserta en la tabla.
 function nuevaCategoria($categoria){
-  $DB = connect();
-  if( ! existeCategoria($categoria) ){
+  if( ! existeCategoria($categoria["name"]) ){
     insertCategoria($categoria);
     return "";
   } else {
@@ -113,9 +112,7 @@ function borrarCategoria($id){
 
 // valida que no haya errores con el archivo
 function validarImport($data){
-  if ($data["categoria"]=="NULL"){
-    return "por favor elige una categoria";
-  }elseif (! isset($_FILES["archivo"]) || !trim($_FILES["archivo"]["name"])){
+  if (! isset($_FILES["archivo"]) || !trim($_FILES["archivo"]["name"])){
     return "no se selecciono ningun archivo";
   }else{
     $file = $_FILES["archivo"];
@@ -170,7 +167,7 @@ function nombreCategoria($id){
 
 function categorias(){
   $DB = connect();
-  $queryText='SELECT c.id as id, c.name AS name, COUNT(c.id) AS cantidad
+  $queryText='SELECT c.id as id, c.start_url, c.name AS name, COUNT(c.id) AS cantidad
             FROM categorias as c
             LEFT JOIN scrapes AS s ON s.categoria_id = c.id
             GROUP BY c.name;'

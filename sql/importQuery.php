@@ -8,19 +8,20 @@ function importQuery(){
   ;
 
 
+//web-scraper-order	web-scraper-start-url	categroias	categroias-href	paginacion	paginacion-href	titulo	product_id	url	precio	vendidos
 
   $importQuery[] ="CREATE TABLE temporal (
-  					  worder varchar(30),
+  					             worder varchar(30),
                         start_url varchar(200),
-                        product_id varchar(50),
-                        precio varchar (10),
-                        titulo varchar(200),
-                        vendidos varchar(200),
-                        pagination varchar(200),
-                        paginationhref varchar(200),
                         subcategoria varchar(200),
                         categorias_href varchar(200),
-                        url varchar(400)
+                        pagination varchar(200),
+                        paginationhref varchar(200),
+                        titulo varchar(200),
+                        product_id varchar(50),
+                        url varchar(400),
+                        precio varchar (10),
+                        vendidos varchar(200)
   					  );"
               ;
 
@@ -40,7 +41,6 @@ function importQuery(){
 
   // --  borro las columnas que no me sirven
   $importQuery[] ="ALTER TABLE temporal DROP COLUMN worder;";
-  $importQuery[] ="ALTER TABLE temporal DROP COLUMN start_url;";
   $importQuery[] ="ALTER TABLE temporal DROP COLUMN pagination;";
   $importQuery[] ="ALTER TABLE temporal DROP COLUMN paginationhref;";
   $importQuery[] ="ALTER TABLE temporal DROP COLUMN categorias_href;";
@@ -63,6 +63,9 @@ function importQuery(){
   vendidos = replace(vendidos,'vendidos',''),
   vendidos = replace(vendidos,'vendido','');";
 
+  //reemplazo el start_url por el numero de categorias
+  $importQuery[]="UPDATE temporal INNER JOIN categorias on trim(temporal.start_url) like concat(trim(categorias.start_url),'%')
+  SET temporal.start_url = categorias.id WHERE trim(temporal.start_url) like concat(trim(categorias.start_url),'%');";
 
 
   // --  creo la columna localidad para separar el campo "vendidos"
@@ -98,7 +101,7 @@ $importQuery[] = " ALTER TABLE temporal ADD COLUMN localidad VARCHAR(200);"
 
   // --   agrego las categorias que no existen
 $importQuery[] = "INSERT IGNORE INTO subcategorias (name, categoria_id)
-select distinct trim(subcategoria) ,:cat_param from temporal
+select distinct trim(subcategoria) ,start_url from temporal
 WHERE trim(subcategoria) not like '';";
 
 
@@ -110,7 +113,8 @@ $importQuery[] = "UPDATE temporal
       SET subcategoria = (
             SELECT subcategorias.id
             FROM subcategorias
-            WHERE subcategorias.name = temporal.subcategoria);
+            WHERE subcategorias.name = temporal.subcategoria
+          AND subcategorias.categoria_id = temporal.start_url );
 ";
 
 
@@ -128,7 +132,7 @@ $importQuery[] = "UPDATE temporal
 
   // -- inserto el resultado en la tabla scrapes
   $importQuery[] = "INSERT INTO scrapes (categoria_id, product_id, title, price, sells, location,subcategoria_id, url)
-  SELECT DISTINCT :cat_param AS categoria_id, product_id, titulo AS title, precio AS price, vendidos AS sells, localidad AS location,subcategoria, url
+  SELECT DISTINCT start_url AS categoria_id, product_id, titulo AS title, precio AS price, vendidos AS sells, localidad AS location,subcategoria, url
   FROM temporal;";
   ;
 
@@ -143,6 +147,7 @@ $importQuery[] = "UPDATE temporal
   //-- RESTAURO LA SEGURIDAD
   $importQuery[] ="SET SQL_SAFE_UPDATES = 1;";
 
+  // var_dump($importQuery);exit;
  return $importQuery;
   }
 
