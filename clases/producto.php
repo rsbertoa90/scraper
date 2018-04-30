@@ -139,7 +139,7 @@
 
 
       //--  importo datos del csv crudo del scrapper
-      $importQuery[] ="LOAD DATA INFILE '/opt/lampp/htdocs/scraper-objetos/imports/temp-import.csv'
+      $importQuery[] ="LOAD DATA INFILE '/opt/lampp/htdocs/scraper/imports/temp-import.csv'
       INTO TABLE temporal
       CHARACTER SET UTF8
       FIELDS TERMINATED BY ','
