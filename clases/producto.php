@@ -177,8 +177,8 @@
 
       $DB = conect();
 
-      require_once("sql/importQuery.php");
-      $queryes = importQuery();
+
+      $queryes = $this->importQuery();
 
       try
       {

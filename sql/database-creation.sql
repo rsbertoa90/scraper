@@ -212,7 +212,7 @@ UPDATE temporal
   --  -- inserto el resultado en la tabla scrapes
   INSERT INTO scrapes (categoria_id, product_id, title, price, sells, location,subcategoria_id, url)
   SELECT DISTINCT start_url AS categoria_id, product_id, titulo AS title, precio AS price, vendidos AS sells, localidad AS location,subcategoria, url
-  FROM temporal;
+  FROM temporal ORDER BY vendidos DESC LIMIT 999999;
   
 
   --   --  Seteo que los productos cargados con url revisen si hay registros con el mismo product_id

@@ -38,7 +38,7 @@ require_once("clases/categoria.php");
     <?php require_once("partials/menu.php") ?>
 
     <main>
-      <h1>BETA TEST REFACTORIZACION A OBJETOS</h1>
+      
       <div class="tabla">
         <h3>CANTIDAD DE ELEMENTOS CARGADOS POR CATEGORIA</h3>
         <table>
