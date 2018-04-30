@@ -12,7 +12,7 @@
 <header>
   <div class="navbar">
     <div class="brand">
-      <h2> <a href="index.php">SCRAPER BETA TEST OBJETOS</a></h2>
+      <h2> <a href="index.php">SCRAPER</a></h2>
     </div>
     <div class="search">
       <form class="form" id="searchform"  action="search_results.php" method="GET">
