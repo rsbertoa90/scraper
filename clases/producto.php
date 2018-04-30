@@ -110,7 +110,48 @@
       return $searchResults;
     }
 
+    // devuelve un array con querys sql para importar el temporal.csv
+    private function importQuery(){
 
+      $importQuery=[];
+      // --borro tabla temporal si existe
+      //--  borro tabla temporal si existe
+      $importQuery[] ="DROP TABLE IF EXISTS temporal;"
+      ;
+
+
+    //web-scraper-order	web-scraper-start-url	categroias	categroias-href	paginacion	paginacion-href	titulo	product_id	url	precio	vendidos
+
+      $importQuery[] ="CREATE TABLE temporal (
+      					             worder varchar(30),
+                            start_url varchar(200),
+                            subcategoria varchar(200),
+                            categorias_href varchar(200),
+                            pagination varchar(200),
+                            paginationhref varchar(200),
+                            titulo varchar(200),
+                            product_id varchar(50),
+                            url varchar(400),
+                            precio varchar (10),
+                            vendidos varchar(200)
+      					  );"
+                  ;
+
+
+      //--  importo datos del csv crudo del scrapper
+      $importQuery[] ="LOAD DATA INFILE '/opt/lampp/htdocs/scraper-objetos/imports/temp-import.csv'
+      INTO TABLE temporal
+      CHARACTER SET UTF8
+      FIELDS TERMINATED BY ','
+      ENCLOSED BY '\"'
+      IGNORE 1 LINES;";
+
+     // llamo procedimiento alojado en la base de datos. Limpia los datos en temporal e inserta en tabla scrapes.
+      $importQuery[]="CALL temporal_clean_and_insert();";
+
+      // var_dump($importQuery);exit;
+     return $importQuery;
+      }
     // valida que no haya errores con el archivo. Si no los hay, importa el csv a la base de datos.
     // devuelve un string vacio si sale todo bien, o un mensaje de error si pasa algo maaaalo.
     public function importar($archivo)
