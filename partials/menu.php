@@ -1,6 +1,7 @@
 <?php
-require_once("sql/sql-functions.php");
-if(!isset($categorias)){$categorias=categorias();}
+require_once("clases/categoria.php");
+
+if(!isset($categorias)){$categorias=new categorias();}
  ?>
 <menu>
     <ul>
@@ -8,9 +9,9 @@ if(!isset($categorias)){$categorias=categorias();}
       <li class="menu-item"> <a href="import.php">IMPORTAR CSV</a> </li>
       <li class="menu-item"> <h3> MEJORES VENDIDOS </h3>
         <ul>
-          <?php foreach ($categorias as $cat): ?>
+          <?php foreach ($categorias->getAll() as $cat): ?>
             <li>
-              <a href="top10cat.php?id=<?=$cat['id']?>">-> <?=$cat["name"]?></a>
+              <a href="top10cat.php?id=<?=$cat->id?>">-> <?=$cat->name?></a>
             </li>
           <?php endforeach; ?>
         </ul>

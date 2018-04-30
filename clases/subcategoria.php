@@ -1,50 +1,53 @@
 <?php
 
 //clase plural. el construtor trae la lista completa.
-class subsubcategorias{
-  private $lista;
+class subcategorias{
 
-  public function getLista(){return $this->lista;}
-
-  private function getAll(){
+  public function getAll(){
     $DB = new connection();
     try {
-      $qt = "SELECT id,name from subsubcategorias" ;
+      $qt = "SELECT id,categoria_id,name from subcategorias" ;
       $query = $DB->prepare($qt);
       $query->execute();
-      $result = $query->fetchAll(PDO::FETCH_CLASS, 'subcategoria');
+      $result = $query->fetchAll(PDO::FETCH_ASSOC);
+      $return = [];
+      foreach ($result as $subcategoria) {
+        $return[] = new subcategoria($result["id"]);
+      }
       return $result;
     } catch (PDOException $e) {
       return $e->getMessage();
     }
   }
 
-  public __construt(){
-    $this->lista = $this->getAll();
-  }
-
-
 }
+
 
 // clase individual
 class subcategoria
 {
   private $id;
-  private $categoria_id
   public $name;
+  public $categoria;
 
-//dando un id trae el objeto categoria
+
+
+//dando un id trae el objeto subcategoria
 private function getById($id){
     $DB = new connection();
     try {
-      $qt = "SELECT id,name from subsubcategorias WHERE id = :id";
+      $qt = "SELECT id,categoria_id,name from subcategorias WHERE id = :id";
       $query = $DB->prepare($qt);
       $query->bindValue(":id",$id,PDO::PARAM_INT);
       $query->execute();
-      $result = $query->fetch(PDO::FETCH_CLASS,"subcategoria");
-      return $result;
+      $result = $query->fetch(PDO::FETCH_ASSOC);
+
+      $this->id=$result["id"];
+      $this->name=$result["name"];
+      $this->categoria = new categoria($result["categoria_id"]);
+
     } catch (PDOException $e) {
-      return $e->getMessage();
+      echo $e->getMessage(); exit;
     }
   }
 
@@ -52,7 +55,7 @@ private function getById($id){
   public function __construct($id=0)
   {
     if($id){
-      $this = $this->getById($id);
+      getById($id);
     }else{
       $this->id = $id;
       $this->name="";
@@ -77,7 +80,7 @@ private function update(){
   }
 }
 
-//insertar nueva categoria
+//insertar nueva subcategoria
 private function insert(){
   $DB = new conection();
   try {

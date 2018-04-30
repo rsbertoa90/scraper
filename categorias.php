@@ -1,20 +1,23 @@
 <?php
-require_once("sql/sql-functions.php");
+require_once("clases/categoria.php");
 
 $errores=[];
-$categorias = categorias();
-$totalScrapes = totalScrapes($categorias);
+$categorias = new Categorias();
 
-$mensajes["categoria"]="";
+$mensajes="";
 
 if ($_POST){
-  $newCat["name"] = trim($_POST["categoria"]);
-  $newCat["start_url"] = trim($_POST["start_url"]);
-  if(!trim($newCat["name"]) || !trim($newCat["start_url"])){
-    $mensajes["categoria"]="Error - Los campos no pueden estar vacios";
+  $newCat = new Categoria();
+
+  $newCat->name = trim($_POST["categoria"]);
+  $newCat->start_url = trim($_POST["start_url"]);
+
+
+  if(!trim($newCat->name) || !trim($newCat->start_url)){
+    $mensajes="Error - Los campos no pueden estar vacios";
   }else{
-    $mensajes["categroia"]=nuevaCategoria($newCat);
-    if(!$mensajes["categoria"]){
+    $mensajes=$newCat->guardar();
+    if(!$mensajes){
       header("location: categorias.php?m=1");
       exit;
     }
@@ -24,17 +27,19 @@ if ($_POST){
 
 if(isset($_GET["action"])){
   if($_GET["action"]=="borrar"){
-    $mensajes["categoria"] = borrarCategoria($_GET["id"]);
-    if (!$mensajes["categoria"]){
+
+    $categoria = new Categoria($_GET["id"]);
+    $mensajes = $categoria->borrar();
+    if (!$mensajes){
       header("location: categorias.php?b=1");
     }
   }
 }
 
 if(isset($_GET["m"])){
-  $mensajes["categoria"]="Nueva categoria insertada con exito!";
+  $mensajes="Nueva categoria insertada con exito!";
 } elseif(isset($_GET["b"])){
-  $mensajes["categoria"]="borrado exitoso";
+  $mensajes="borrado exitoso";
 }
 
 
@@ -49,7 +54,7 @@ if(isset($_GET["m"])){
     <?php require_once("./partials/menu.php") ?>
 
     <main>
-      <h3>  <span class="error-message"><?=$mensajes['categoria']?></span> </h3>
+      <h3>  <span class="error-message"><?=$mensajes?></span> </h3>
       <div class="tabla">
         <table>
           <tr>
@@ -57,16 +62,17 @@ if(isset($_GET["m"])){
             <th>START_URL</th>
             <th> - </th>
           </tr>
-          <?php foreach ($categorias as $categoria): ?>
+
+          <?php foreach ($categorias->getAll() as $cat): ?>
             <tr>
               <td>
-                <?=$categoria["name"]?>
+                <?=$cat->name?>
               </td>
               <td>
-                <a href="<?=$categoria["start_url"]?>"> <?=$categoria["start_url"]?></a>
+                <a target="_blank" href="<?=$cat->start_url?>"> <?=$cat->start_url?></a>
               </td>
               <td>
-                <a href="categorias.php?action=borrar&id=<?=$categoria['id']?>" >[borrar]</a> </li>
+                <a href="categorias.php?action=borrar&id=<?=$cat->id?>" >[borrar]</a> </li>
               </td>
             </tr>
           <?php endforeach; ?>

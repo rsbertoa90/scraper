@@ -5,16 +5,21 @@
     exit;
   }
 
+require_once("clases/producto.php");
+require_once("clases/categoria.php");
 
-if (isset($_POST["vendidos"])){
-  $criterio="vendidos";
-}else{$criterio="dinero_movido";}
+$categoria = new Categoria();
+$categoria->getById($_GET["id"]);
+
 
   $headers=["localidad","titulo","precio","inicio periodo","fin periodo","dias periodo","vendidos periodo","dinero movido"];
-  $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","periodo_en_dias","ventas_en_periodo","dinero_movido"];
+  $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_periodo","ventas_en_periodo","dinero_movido"];
 
-  require_once("sql/sql-functions.php");
-  $top10 = bestSellers(30,$criterio,$_GET["id"]);
+
+  $productos = new Productos();
+  if (isset($_POST["vendidos"])){$productos->setCriterio("vendidos");}
+  else{$productos->setCriterio("dinero_movido");}
+  $top10 = $productos->bestSellers(30,$_GET["id"]);
 
  ?>
 
@@ -25,11 +30,11 @@ if (isset($_POST["vendidos"])){
     <?php require_once("partials/header.php") ?>
     <?php require_once("partials/menu.php") ?>
     <main>
-      <h2>Mejor vendidos: <?=nombreCategoria($_GET["id"])?></h2>
+      <h2>Mejor vendidos: <?=$categoria->name?></h2>
 
       <!-- botones para ordernar por vendidos o por monto en dinero -->
       <form class="" action="top10cat.php?id=<?=$_GET['id']?>" method="post">
-        <?php if ($criterio == "vendidos"): ?>
+        <?php if ($productos->getCriterio() == "vendidos"): ?>
           <button type="submit"class= "enabled" >Ordernar por dinero movido</button>
           <button class= "disabled" type="submit" name="vendidos" value="1" disabled>Ordenar por cantidad de vendidos</button>
         <?php else: ?>
@@ -50,10 +55,10 @@ if (isset($_POST["vendidos"])){
         <?php foreach ($top10 as $item): ?>
           <tr>
             <?php foreach ($indexes as $index): ?>
-              <?php if(trim($item["url"])){$item["titulo"]="<a target='_blank' href='".$item["url"]."'>".$item["titulo"]."</a>";} ?>
-              <td><?=$item[$index]?></td>
+              <?php if(trim($item->url)){$item->titulo="<a target='_blank' href='{$item->url}'>{$item->titulo}</a>";} ?>
+              <td><?=$item->$index?></td>
             <?php endforeach; ?>
-            <td> <a href="historico.php?product_id=<?=$item['product_id']?>">[ver historico]</a></td>
+            <td> <a href="historico.php?product_id=<?=$item->product_id?>">[ver historico]</a></td>
           </tr>
         <?php endforeach; ?>
       </table>

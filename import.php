@@ -1,37 +1,38 @@
 <?php
-require_once("sql/sql-functions.php");
+require_once("clases/categoria.php");
+require_once("clases/producto.php");
 
 
-if(!isset($categorias)){$categorias=categorias();}
-$totalScrapes= totalScrapes($categorias);
+if(!isset($categorias)){$categorias= new Categorias();}
+
+
 $mensajes="";
+$productos = new Productos();
 
-if ($_POST){
-
-    $mensajes = validarImport($_POST);
-    if(!$mensajes){
-          $path = dirname(__file__ , 1) . "/imports/" . "temp-import.csv";
-          move_uploaded_file($_FILES["archivo"]["tmp_name"], $path);
-          $mensajes = scrapImports($_POST["categoria"]);
-          if (!$mensajes){
-            header("location: import.php?m=1");
-            exit;
-          }
-        }
-      }
-
-if (isset($_GET["m"])){
-$mensajes="IMPORTACION EXITOSA!";
+if (isset($_FILES["archivo"]))
+{
+    $mensajes = $productos->importar($_FILES["archivo"]);
+    if (!$mensajes)
+    {
+      header("location: import.php?m=1");
+      exit;
+    }
 }
 
-if(isset($_POST["share"])){
-    share();
-    header("location: import.php?share=true");
-    exit;
+if (isset($_GET["m"])){$mensajes="IMPORTACION EXITOSA!";}
+
+if(isset($_POST["share"]))
+{
+    $mensajes = $productos->share();
+    if(!$mensajes)
+    {
+      header("location: import.php?share=true");
+      exit;
+    }
+
 }
-if (isset($_GET["share"])){
-  $mensajes="SHARED!";
-}
+
+if (isset($_GET["share"])){ $mensajes="SHARED!"; }
 
 
 ?>
@@ -52,8 +53,8 @@ if (isset($_GET["share"])){
       <!-- <div class="form-block">
         <select name="categoria">
           <option value="NULL"> Elige una categoria </option>
-          <?php foreach ($categorias as $categoria): ?>
-            <option value="<?=$categoria["id"]?>"> <?=$categoria["name"]?> </option>
+          <?php foreach ($categorias->getAll() as $categoria): ?>
+            <option value="<?=$categoria->id?>"> <?=$categoria->name?> </option>
           <?php endforeach; ?>
         </select>
       </div> -->
