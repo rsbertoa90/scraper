@@ -7,16 +7,16 @@ require_once("clases/categoria.php");
 
   if(!isset($categorias))
   {
-    $categorias = new categorias();
+    $categorias = Categorias::getAll();
   }
-  $productos = new Productos();
-  $totalScrapes= $productos->totalScrapes();
-  $totalProductos = $productos->totalProductos();
 
-  if(isset($_GET["vendidos"])){$productos->setCriterio("vendidos");}
-  else{$productos->setCriterio("dinero_movido");}
+  $totalScrapes= Productos::totalScrapes();
+  $totalProductos = Productos::totalProductos();
 
-  $top10 = $productos->bestSellers(20);
+  if(isset($_GET["vendidos"])){Productos::setCriterio("vendidos");}
+  else{Productos::setCriterio("dinero_movido");}
+
+  $top10 = Productos::bestSellers(20);
   $mensajes="";
 
 
@@ -38,7 +38,7 @@ require_once("clases/categoria.php");
     <?php require_once("partials/menu.php") ?>
 
     <main>
-      
+
       <div class="tabla">
         <h3>CANTIDAD DE ELEMENTOS CARGADOS POR CATEGORIA</h3>
         <table>
@@ -46,7 +46,7 @@ require_once("clases/categoria.php");
             <th>Categoria</th>
             <th>Cantidad de registros</th>
           </tr>
-          <?php foreach ($categorias->getAll() as $cat): ?>
+          <?php foreach ($categorias as $cat): ?>
             <tr class="">
               <td class="celda ">
                 <a class="text-blue" href="top10cat.php?id=<?=$cat->id?>"><?=$cat->name?></a>
@@ -81,7 +81,7 @@ require_once("clases/categoria.php");
 
               <!-- botones para ordernar por vendidos o por monto en dinero -->
               <form class="" action="index.php" method="GET">
-                <?php if ($productos->getCriterio() == "vendidos"): ?>
+                <?php if (Productos::$criterio_ordenamiento == "vendidos"): ?>
                   <button type="submit" class="enabled" >Ordernar por dinero movido</button>
                   <button class= "disabled" type="submit" name="vendidos" value="1" disabled>Ordenar por cantidad de vendidos</button>
                 <?php else: ?>

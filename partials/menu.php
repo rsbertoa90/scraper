@@ -1,7 +1,7 @@
 <?php
 require_once("clases/categoria.php");
 
-if(!isset($categorias)){$categorias=new categorias();}
+if(!isset($categorias)){$categorias=Categorias::getAll();}
  ?>
 <menu>
     <ul>
@@ -9,7 +9,7 @@ if(!isset($categorias)){$categorias=new categorias();}
       <li class="menu-item"> <a href="import.php">IMPORTAR CSV</a> </li>
       <li class="menu-item"> <h3> MEJORES VENDIDOS </h3>
         <ul>
-          <?php foreach ($categorias->getAll() as $cat): ?>
+          <?php foreach ($categorias as $cat): ?>
             <li>
               <a href="top10cat.php?id=<?=$cat->id?>">-> <?=$cat->name?></a>
             </li>

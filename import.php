@@ -3,7 +3,7 @@ require_once("clases/categoria.php");
 require_once("clases/producto.php");
 
 
-if(!isset($categorias)){$categorias= new Categorias();}
+if(!isset($categorias)){$categorias= Categorias::getAll();}
 
 
 $mensajes="";
@@ -53,7 +53,7 @@ if (isset($_GET["share"])){ $mensajes="SHARED!"; }
       <!-- <div class="form-block">
         <select name="categoria">
           <option value="NULL"> Elige una categoria </option>
-          <?php foreach ($categorias->getAll() as $categoria): ?>
+          <?php foreach ($categorias as $categoria): ?>
             <option value="<?=$categoria->id?>"> <?=$categoria->name?> </option>
           <?php endforeach; ?>
         </select>

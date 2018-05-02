@@ -2,7 +2,7 @@
 require_once("clases/categoria.php");
 
 $errores=[];
-$categorias = new Categorias();
+$categorias = Categorias::getAll();
 
 $mensajes="";
 
@@ -63,7 +63,7 @@ if(isset($_GET["m"])){
             <th> - </th>
           </tr>
 
-          <?php foreach ($categorias->getAll() as $cat): ?>
+          <?php foreach ($categorias as $cat): ?>
             <tr>
               <td>
                 <?=$cat->name?>

@@ -5,22 +5,20 @@ if(!isset($_GET["search"])){
 
 require_once("clases/producto.php");
 
-$productos = new Productos();
-
 
 if (isset($_GET["min"]) && trim($_GET["min"]))
 {
-  $productos->setPrecioMinimo($_GET["min"]);
+  ProductossetPrecioMinimo($_GET["min"]);
 }
 if (isset($_GET["max"]) && trim($_GET["max"]))
 {
-  $productos->setPrecioMaximo($_GET["max"]);
+  ProductossetPrecioMaximo($_GET["max"]);
 }
 
-if( isset($_POST["vendidos"] ) ) {$productos->setCriterio("vendidos");}
-else{ $productos->setCriterio("dinero_movido"); }
+if( isset($_POST["vendidos"] ) ) {ProductossetCriterio("vendidos");}
+else{ Productos::setCriterio("dinero_movido"); }
 
-$results = $productos->search($_GET["search"]);
+$results = Productos::search($_GET["search"]);
 
 $headers=["localidad","titulo","precio","inicio periodo","fin periodo","dias periodo","vendidos periodo","dinero movido"];
 $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_periodo","ventas_en_periodo","dinero_movido"];
@@ -39,7 +37,7 @@ $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_per
 
       <!-- botones para ordernar por vendidos o por monto en dinero -->
       <form class="" action="" method="POST">
-        <?php if ($productos->getCriterio() == "vendidos"): ?>
+        <?php if (Productos::$criterio_ordenamiento == "vendidos"): ?>
           <button type="submit" class= "enabled" >Ordernar por dinero movido</button>
           <button class= "disabled" type="submit" name="vendidos" value="1" disabled>Ordenar por cantidad de vendidos</button>
         <?php else: ?>

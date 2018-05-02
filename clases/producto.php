@@ -8,24 +8,19 @@
 
   {
 
-    private $criterio_ordenamiento = "dinero_movido";
-    private $precio_minimo = 0;
-    private $precio_maximo = 999999;
+    static public $criterio_ordenamiento = "dinero_movido";
+    static public $precio_minimo = 0;
+    static public $precio_maximo = 999999;
 
 
 
-    public function getCriterio(){return $this->criterio_ordenamiento;}
-    public function getPrecioMaximo(){return $this->precio_maximo;}
-    public function getPrecioMinimo(){return $this->precio_minimo;}
 
-    public function setPrecioMAximo($precio){$this->precio_maximo = $precio;}
-    public function setPrecioMinimo($precio){$this->precio_minimo = $precio;}
 
-    public function setCriterio($criterio)
+    static public function setCriterio($criterio)
     {
       if ( in_array($criterio,["dinero_movido","vendidos"]) )
       {
-        $this->criterio_ordenamiento=$criterio;
+        self::$criterio_ordenamiento = $criterio;
       }
     }
 
@@ -33,7 +28,7 @@
     // busco los resultados de todos los productos que coincidan en titulo con lo buscado
     // ordenado por dinero movido, y con limite de 30;
 
-    public function search($search)
+    static public function search($search)
     {
 
       $searchArray = preg_split('/\s+/', $search);
@@ -62,12 +57,10 @@
 
       $queryText.=" GROUP BY product_id HAVING COUNT(product_id) > 1 AND periodo_en_dias > 0 ";
 
-      if($this->criterio_ordenamiento=="vendidos"){ $queryText.="  ORDER BY ventas_en_periodo desc, dinero_movido desc"; }
+      if(self::$criterio_ordenamiento=="vendidos"){ $queryText.="  ORDER BY ventas_en_periodo desc, dinero_movido desc"; }
       else{ $queryText.="  ORDER BY dinero_movido desc, ventas_en_periodo desc"; }
 
       $queryText.="  limit 30;"  ;
-
-      // var_dump($queryText);exit;
 
       try
       {
@@ -77,8 +70,8 @@
             $query->bindValue(":{$key}",$value,PDO::PARAM_STR);
           }
 
-          $query->bindValue(':min',$this->precio_minimo,PDO::PARAM_INT);
-          $query->bindValue(':max',$this->precio_maximo,PDO::PARAM_INT);
+          $query->bindValue(':min',self::$precio_minimo,PDO::PARAM_INT);
+          $query->bindValue(':max',self::$precio_maximo,PDO::PARAM_INT);
 
           $query->execute();
           $result = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -154,7 +147,7 @@
       }
     // valida que no haya errores con el archivo. Si no los hay, importa el csv a la base de datos.
     // devuelve un string vacio si sale todo bien, o un mensaje de error si pasa algo maaaalo.
-    public function importar($archivo)
+    static public function importar($archivo)
     {
       if (! isset($archivo) || !trim($archivo["name"]))
       {
@@ -178,7 +171,7 @@
       $DB = conect();
 
 
-      $queryes = $this->importQuery();
+      $queryes = selfimportQuery();
 
       try
       {
@@ -202,7 +195,7 @@
 
 
     // Toma los registros en scrapes que no tienen url, se fija si hay registros con el mismo product_id que si tengan y los que tienen les comparten a los que no.
-    public function share()
+    static public function share()
     {
       $DB = conect();
       $queryText[] = "SET SQL_SAFE_UPDATES = 0;";
@@ -235,7 +228,7 @@
 
 
     // devuelve el total de registros de la tabla scrapes
-    public function totalScrapes()
+    static public function totalScrapes()
     {
       $DB=conect();
 
@@ -253,7 +246,7 @@
     }
 
     //devuelve el total de productos (PRODUCT_ID distintos) de la tabla scrapes
-    public function totalProductos()
+    static public function totalProductos()
     {
       $DB=conect();
 
@@ -277,7 +270,7 @@
 
     // Mejores vendidos por categoia. Si categoria no se pasa como parametro trae mejores vendidos en general.
     // devuelve un Array de objetos de clase producto
-    public function bestSellers($cantidad , $categoria_id = 0)
+    static public function bestSellers($cantidad , $categoria_id = 0)
     {
       $DB=conect();
 
@@ -303,14 +296,13 @@
       $queryText.="GROUP BY product_id HAVING COUNT(product_id) > 1 AND periodo_en_dias > 0 "
       ;
 
-      if (trim($this->criterio_ordenamiento)=="vendidos"){
+      if (trim(self::$criterio_ordenamiento)=="vendidos"){
         $queryText.=' ORDER BY ventas_en_periodo desc, dinero_movido desc ';
       }else{
         $queryText.=' ORDER BY dinero_movido desc, ventas_en_periodo desc ';
       }
 
       $queryText.= ' LIMIT :cantidad; ';
-
 
 
         try

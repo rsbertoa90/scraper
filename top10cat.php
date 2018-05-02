@@ -16,10 +16,9 @@ $categoria->getById($_GET["id"]);
   $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_periodo","ventas_en_periodo","dinero_movido"];
 
 
-  $productos = new Productos();
-  if (isset($_POST["vendidos"])){$productos->setCriterio("vendidos");}
-  else{$productos->setCriterio("dinero_movido");}
-  $top10 = $productos->bestSellers(30,$_GET["id"]);
+  if (isset($_POST["vendidos"])){Productos::setCriterio("vendidos");}
+  else{Productos::setCriterio("dinero_movido");}
+  $top10 = Productos::bestSellers(30,$_GET["id"]);
 
  ?>
 
@@ -34,7 +33,7 @@ $categoria->getById($_GET["id"]);
 
       <!-- botones para ordernar por vendidos o por monto en dinero -->
       <form class="" action="top10cat.php?id=<?=$_GET['id']?>" method="post">
-        <?php if ($productos->getCriterio() == "vendidos"): ?>
+        <?php if (Productos::$criterio_ordenamiento == "vendidos"): ?>
           <button type="submit"class= "enabled" >Ordernar por dinero movido</button>
           <button class= "disabled" type="submit" name="vendidos" value="1" disabled>Ordenar por cantidad de vendidos</button>
         <?php else: ?>

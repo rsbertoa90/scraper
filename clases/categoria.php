@@ -4,7 +4,8 @@ require_once("sql/conection.php");
 //clase plural. el construtor trae la lista completa.
 class Categorias
 {
-  public function getAll()
+  // Devuelve un array con todas las categorias, todas con la cantidad de registros en scrap que tiene cada una.
+  static public function getAll()
   {
     $DB = conect();
     try {
