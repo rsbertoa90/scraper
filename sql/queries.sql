@@ -22,40 +22,42 @@ describe scrapes;
 -- diferencias en ventas y el monto de dinero de esas ventas del periodo
 -- tomando como periodo el maximo y el minimo de las fechas insertadas en ese product_id
 Select 
-	c.name as categoria,
+	-- c.name as categoria,
 	title as titulo,
     price as precio,
-   -- sells as ventas_total,
+   sells as ventas_total,
     location as localidad,
-   -- MAX(data_date) as inicio_periodo,
-   -- MIN(data_date) as fin_periodo,
+   MIN(data_date) as inicio_periodo,
+   MAX(data_date) as fin_periodo,
        MAX(sells) - MIN(sells) as ventas_en_periodo,
-      concat(TIMESTAMPDIFF(DAY, MAX(data_date), MIN(data_date))," dias")  as periodo_en_dias,
+      concat(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date))," dias")  as periodo_en_dias,
     (MAX(sells) - MIN(sells)) * price as dinero_movido
 FROM scrapes as s 
-inner join categorias as c on s.categoria_id=c.id
+-- inner join categorias as c on s.categoria_id=c.id
 group by product_id having count(product_id) > 1
 order by  dinero_movido desc
-limit 20;
+limit 30;
 
 -- mejores vendidos filtrado por categoria
 
 Select 
-	title as titulo,
-    price as precio,
+	-- title as titulo,
+    url as LINK,
+    -- price as precio,
    -- sells as ventas_total,
-    location as localidad,
+    -- location as localidad,
    -- MAX(data_date) as inicio_periodo,ount
    -- MIN(data_date) as fin_periodo,
-       MAX(sells) - MIN(sells) as ventas_en_periodo,
-      concat(TIMESTAMPDIFF(DAY, MAX(data_date), MIN(data_date))," dias")  as periodo_en_dias,
+      --  MAX(sells) - MIN(sells) as ventas_en_periodo,
+      -- concat(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date))," dias")  as periodo_en_dias,
     (MAX(sells) - MIN(sells)) * price as dinero_movido
 FROM scrapes as s 
 inner join categorias as c on s.categoria_id=c.id
-where c.name like 'Mate%'
+where c.id = 12
 group by product_id having count(product_id) > 1
 order by  dinero_movido desc
 limit 20;
+
 
 -- consulto todos los registros en scrapes
 -- si el id de producto esta en la lista de lo mas vendido

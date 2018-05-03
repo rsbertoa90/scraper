@@ -33,6 +33,7 @@ class Categorias
       $categoria->start_url=$row["start_url"];
       $categoria->cantidad_registros=$row["cantidad"];
 
+
       $categorias[]=$categoria;
     }
     return $categorias;
@@ -50,6 +51,7 @@ class Categoria
   public $name;
   public $start_url;
   public $cantidad_registros;
+
 
 
 

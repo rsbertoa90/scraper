@@ -18,7 +18,9 @@ $categoria->getById($_GET["id"]);
 
   if (isset($_POST["vendidos"])){Productos::setCriterio("vendidos");}
   else{Productos::setCriterio("dinero_movido");}
-  $top10 = Productos::bestSellers(30,$_GET["id"]);
+
+  if ($categoria)
+  $top10 = Productos::bestSellers($_GET["id"]);
 
  ?>
 

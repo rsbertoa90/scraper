@@ -10,13 +10,18 @@ require_once("clases/categoria.php");
     $categorias = Categorias::getAll();
   }
 
-  $totalScrapes= Productos::totalScrapes();
-  $totalProductos = Productos::totalProductos();
+  if (!isset($totalScrapes)){$totalScrapes = Productos::totalScrapes();}
+  if (!isset($totalProductos)) {$totalProductos = Productos::totalProductos();}
 
   if(isset($_GET["vendidos"])){Productos::setCriterio("vendidos");}
   else{Productos::setCriterio("dinero_movido");}
 
-  $top10 = Productos::bestSellers(20);
+
+  if(!isset($top10))
+  {
+    Productos::renovarCache();
+    $top10 = Productos::bestSellers();
+  }
   $mensajes="";
 
 
@@ -98,6 +103,7 @@ require_once("clases/categoria.php");
               </th>
             <?php endforeach; ?>
           </tr>
+        
           <?php foreach ($top10 as $item): ?>
             <?php if(trim($item->url)){$item->titulo="<a target='_blank' href='{$item->url}'> {$item->titulo} </a>";} ?>
             <tr>

@@ -11,11 +11,138 @@
     static public $criterio_ordenamiento = "dinero_movido";
     static public $precio_minimo = 0;
     static public $precio_maximo = 999999;
+    static public $categoria_id = 0;
 
 
 
 
+    private static function isChached()
+    {
+      $DB = conect();
 
+      $queryText = "SELECT count(*)as c FROM cache_bestSellers WHERE categoria_id = :categoria and criterio =:criterio ";
+      try {
+        $query=$DB->prepare($queryText);
+
+        $query->bindValue(':categoria' , self::$categoria_id ,PDO::PARAM_INT);
+        $query->bindValue(':criterio' , self::$criterio_ordenamiento ,PDO::PARAM_STR);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        return $result["c"];
+      } catch (PDOException $e) {
+        return $e->getMessage();
+      }
+
+    }
+
+    // devuelve true si el cache esta desactualizado
+    private static function shouldI()
+    {
+
+      if(self::isChached()==0){ return true;}
+
+      $DB = conect();
+      $queryText = "SELECT
+      COUNT(*) as shouldI
+      FROM cache_bestSellers as c, insertions as i
+      WHERE c.categoria_id = :cat
+      AND c.criterio = :criterio
+      AND c.cache_date < i.insertion_date;";
+      	  ;
+
+      try
+      {
+        $query = $DB->prepare($queryText);
+        $query->bindValue(':criterio',self::$criterio_ordenamiento,PDO::PARAM_STR);
+        $query->bindValue(':cat',self::$categoria_id,PDO::PARAM_INT);
+        $query->execute();
+        $result = $query->fetch();
+      } catch (PDOException $e) {
+        return $e->getMessage();
+      }
+      return $result["shouldI"];
+    }
+
+    // borra el cache que se va a reemplazar con datos nuevos
+    private static function deleteCache()
+    {
+
+      $DB=conect();
+      $queryText="DELETE FROM cache_bestSellers WHERE criterio = :criterio  AND categoria_id = :categoria_id";
+      try
+      {
+        $DB->beginTransaction();
+        $query = $DB->prepare($queryText);
+        $query->bindValue(':criterio',self::$criterio_ordenamiento,PDO::PARAM_STR);
+        $query->bindValue(':categoria_id',self::$categoria_id,PDO::PARAM_INT);
+        $query->execute();
+        echo "borre cache";
+        $DB->commit();
+      } catch (PDOException $e) {
+        $DB->rollBack();
+        echo $e->getMessage();exit;
+        return $e->getMessage();
+      }
+
+    }
+
+    // carga datos nuevos en cache
+    private static function heatCache()
+    {
+        $DB=conect();
+        $queryText=
+        "INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
+          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido)
+        SELECT
+    	   :criterio,
+         :categoria,
+         product_id,
+         title AS titulo,
+    	   url,
+         price AS precio,
+         location AS localidad,
+         DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
+         DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
+         CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS dias_periodo,
+         MAX(sells) - MIN(sells) AS ventas,
+         (MAX(sells) - MIN(sells)) * price AS dinero
+        FROM scrapes AS s ";
+       if (self::$categoria_id){$queryText.=" WHERE categoria_id = :categoria";}
+  	   $queryText.=" GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 ";
+  	   if (self::$criterio_ordenamiento == "vendidos") {$queryText.=" ORDER BY ventas desc, dinero desc";}
+         else {$queryText.=" ORDER BY dinero desc, ventas desc";}
+      $queryText.= " LIMIT 30;";
+
+      try {
+        $DB->beginTransaction();
+        $query=$DB->prepare($queryText);
+        $query->bindValue(':criterio',self::$criterio_ordenamiento,PDO::PARAM_STR);
+        $query->bindValue(':categoria',self::$categoria_id,PDO::PARAM_INT);
+        $query->execute();
+        echo "calente cache";
+        $DB->commit();
+      } catch (PDOException $e) {
+        $DB->rollBack();
+        echo $e->getMessage();exit;
+      }
+
+    }
+
+    // Si la cache esta desactualizada, la actualiza.
+    public static function renovarCache()
+    {
+      if (self::shouldI())
+      {
+        echo "actualizar cache";
+        self::deleteCache();
+        self::heatCache();
+      }
+    }
+
+
+
+
+    //setter criterio
     static public function setCriterio($criterio)
     {
       if ( in_array($criterio,["dinero_movido","vendidos"]) )
@@ -108,9 +235,9 @@
 
       $importQuery=[];
       // --borro tabla temporal si existe
-      //--  borro tabla temporal si existe
-      $importQuery[] ="DROP TABLE IF EXISTS temporal;"
-      ;
+      //--  borro tabla temporal si existeproducto
+      $importQuery[] ="DROP TABLE IF EXISTS temporal;";
+
 
 
     //web-scraper-order	web-scraper-start-url	categroias	categroias-href	paginacion	paginacion-href	titulo	product_id	url	precio	vendidos
@@ -118,7 +245,7 @@
       $importQuery[] ="CREATE TABLE temporal (
       					             worder varchar(30),
                             start_url varchar(200),
-                            subcategoria varchar(200),
+                            subcategoriabestSe varchar(200),
                             categorias_href varchar(200),
                             pagination varchar(200),
                             paginationhref varchar(200),
@@ -146,7 +273,7 @@
      return $importQuery;
       }
     // valida que no haya errores con el archivo. Si no los hay, importa el csv a la base de datos.
-    // devuelve un string vacio si sale todo bien, o un mensaje de error si pasa algo maaaalo.
+    // devuelve un string vacio si sale todo bien,cat o un mensaje de error si pasa algo maaaalo.
     static public function importar($archivo)
     {
       if (! isset($archivo) || !trim($archivo["name"]))
@@ -171,7 +298,7 @@
       $DB = conect();
 
 
-      $queryes = selfimportQuery();
+      $queryes = self::importQuery();
 
       try
       {
@@ -211,7 +338,7 @@
         foreach ($queryText as $qt)
         {
           $query = $DB->prepare($qt);
-          $query->execute();
+          $query->execute();self::$categoria_id = 0;
         }
         $DB->commit();
         return "";
@@ -268,51 +395,30 @@
     }
 
 
-    // Mejores vendidos por categoia. Si categoria no se pasa como parametro trae mejores vendidos en general.
-    // devuelve un Array de objetos de clase producto
-    static public function bestSellers($cantidad , $categoria_id = 0)
+    // Tomo mejores vendidos por categoria de la cache.
+    static public function bestSellers()
     {
       $DB=conect();
 
-      $queryText = "SELECT
-        product_id,
-      	categoria_id,
-      	title AS titulo,
-        url,
-          price AS precio,
-          location AS localidad,
-          DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
-          DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
-             MAX(sells) - MIN(sells) AS ventas_en_periodo,
-            CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS periodo_en_dias,
-          (MAX(sells) - MIN(sells)) * price AS dinero_movido
-        FROM scrapes AS s "
-         ;
-
-        if ($categoria_id){
-        $queryText .= "WHERE categoria_id = :c_id ";
-      }
-
-      $queryText.="GROUP BY product_id HAVING COUNT(product_id) > 1 AND periodo_en_dias > 0 "
+      $queryText = "SELECT product_id,categoria_id,url, localidad, titulo, precio, inicio_periodo, fin_periodo,dias_periodo, ventas_periodo, dinero_movido
+      FROM cache_bestSellers
+      WHERE criterio = :criterio
+      AND categoria_id = :categoria
+      "
       ;
 
       if (trim(self::$criterio_ordenamiento)=="vendidos"){
-        $queryText.=' ORDER BY ventas_en_periodo desc, dinero_movido desc ';
+        $queryText.=' ORDER BY ventas_periodo desc, dinero_movido desc ';
       }else{
-        $queryText.=' ORDER BY dinero_movido desc, ventas_en_periodo desc ';
+        $queryText.=' ORDER BY dinero_movido desc, ventas_periodo desc ';
       }
-
-      $queryText.= ' LIMIT :cantidad; ';
-
 
         try
         {
           $query= $DB->prepare($queryText);
-          $query->bindValue(':cantidad',$cantidad,PDO::PARAM_INT);
-          if($categoria_id)
-          {
-            $query->bindValue(':c_id',$categoria_id,PDO::PARAM_INT);
-          }
+          $query->bindValue(':criterio',self::$criterio_ordenamiento,PDO::PARAM_STR);
+          $query->bindValue(':categoria',self::$categoria_id,PDO::PARAM_INT);
+
           $query->execute();
           $result = $query->fetchAll(PDO::FETCH_ASSOC);
 
@@ -333,13 +439,14 @@
           $producto->localidad =$row["localidad"];
           $producto->inicio_periodo =$row["inicio_periodo"];
           $producto->fin_periodo =  $row["fin_periodo"];
-          $producto->ventas_en_periodo =$row["ventas_en_periodo"];
-          $producto->dias_periodo =$row["periodo_en_dias"];
+          $producto->ventas_en_periodo =$row["ventas_periodo"];
+          $producto->dias_periodo =$row["dias_periodo"];
           $producto->dinero_movido =$row["dinero_movido"];
           $bestSellers[]=$producto;
         }
         return $bestSellers;
     }
+
 
     //borra el ultimo insert
 
