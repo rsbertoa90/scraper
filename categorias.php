@@ -60,6 +60,8 @@ if(isset($_GET["m"])){
           <tr>
             <th>NOMBRE</th>
             <th>START_URL</th>
+            <th>CANTIDAD DE PRODUCTOS SEGUIDOS</th>
+            <th>ULTIMA INSERCION</th>
             <th> - </th>
           </tr>
 
@@ -70,6 +72,12 @@ if(isset($_GET["m"])){
               </td>
               <td>
                 <a target="_blank" href="<?=$cat->start_url?>"> <?=$cat->start_url?></a>
+              </td>
+              <td>
+                <?=$cat->cantidad_registros?>
+              </td>
+              <td>
+                <?=$cat->last_insert?>
               </td>
               <td>
                 <a href="categorias.php?action=borrar&id=<?=$cat->id?>" >[borrar]</a> </li>

@@ -9,10 +9,11 @@ class Categorias
   {
     $DB = conect();
     try {
-      $qt='SELECT c.id as id, c.start_url, c.name AS name, COUNT(c.id) AS cantidad
-                FROM categorias as c
-                LEFT JOIN scrapes AS s ON s.categoria_id = c.id
-                GROUP BY c.name;'
+
+      $qt='SELECT c.categoria_id as id, c.start_url, c.nombre AS name,c.productos AS cantidad,
+      DATE_FORMAT(c.last_insert,"%d/%m/%Y" ) as last_insert
+                FROM cache_categorias as c
+                ORDER BY c.last_insert desc,cantidad desc'
                 ;
       $query = $DB->prepare($qt);
       $query->execute();
@@ -32,6 +33,7 @@ class Categorias
       $categoria->name=$row["name"];
       $categoria->start_url=$row["start_url"];
       $categoria->cantidad_registros=$row["cantidad"];
+      $categoria->last_insert=$row["last_insert"];
 
 
       $categorias[]=$categoria;
@@ -51,7 +53,7 @@ class Categoria
   public $name;
   public $start_url;
   public $cantidad_registros;
-
+  public $last_insert;
 
 
 

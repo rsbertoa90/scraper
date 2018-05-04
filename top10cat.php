@@ -16,7 +16,7 @@ $categoria->getById($_GET["id"]);
   $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_periodo","ventas_en_periodo","dinero_movido"];
 
 
-  if (isset($_POST["vendidos"])){Productos::setCriterio("vendidos");}
+  if (isset($_POST["ventas_periodo"])){Productos::setCriterio("ventas_periodo");}
   else{Productos::setCriterio("dinero_movido");}
 
   if ($categoria)
@@ -35,13 +35,13 @@ $categoria->getById($_GET["id"]);
 
       <!-- botones para ordernar por vendidos o por monto en dinero -->
       <form class="" action="top10cat.php?id=<?=$_GET['id']?>" method="post">
-        <?php if (Productos::$criterio_ordenamiento == "vendidos"): ?>
-          <button type="submit"class= "enabled" >Ordernar por dinero movido</button>
-          <button class= "disabled" type="submit" name="vendidos" value="1" disabled>Ordenar por cantidad de vendidos</button>
+        <?php if (Productos::$criterio_ordenamiento == "ventas_periodo"): ?>
+            <button type="submit" class="enabled" >Ordernar por dinero movido</button>
+            <button class= "disabled" type="submit" name="ventas_periodo" value="1" disabled>Ordenar por cantidad de vendidos</button>
         <?php else: ?>
-          <button type="submit" class ="disabled" disabled>Ordernar por dinero movido</button>
-          <button type="submit" class= "enabled" name="vendidos" value="1" >Ordenar por cantidad de vendidos</button>
-      <?php endif ?>
+            <button type="submit" class ="disabled" disabled>Ordernar por dinero movido</button>
+            <button type="submit" name="ventas_periodo" class="enabled" value="1" >Ordenar por cantidad de vendidos</button>
+        <?php endif ?>
       </form>
 
 

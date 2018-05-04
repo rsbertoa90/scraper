@@ -1,5 +1,6 @@
 
 -- PASADO UN PARAMETRO DEVUELVE SI ES NUMERICO
+DROP function if exists isnumeric;
 create function isnumeric(val varchar(1024)) 
 returns tinyint(1) deterministic 
 return val regexp '^(-|\\+)?([0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+|[0-9]+)$'; 
@@ -7,6 +8,7 @@ return val regexp '^(-|\\+)?([0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+|[0-9]+)$';
 
 -- ------------------------------------------------------- --
 -- BORRAR ULTIMA INSERCION
+DROP PROCEDURE IF EXISts delete_last_insert;
 DELIMITER $$
 
 CREATE PROCEDURE delete_last_insert() 
@@ -37,7 +39,7 @@ CREATE PROCEDURE temporal_clean_and_insert()
 BEGIN
 
 
-
+DECLARE categoria int;
 -- 
 -- --  --borro tabla temporal si existe
 --   -- --  borro tabla temporal si existe
@@ -102,12 +104,12 @@ BEGIN
   vendidos = replace(vendidos,'vendidos',''),
   vendidos = replace(vendidos,'vendido','');
 
+
   -- reemplazo el start_url por el numero de categorias
-  UPDATE temporal INNER JOIN categorias on trim(temporal.start_url) like concat(trim(categorias.start_url),'%')
-  SET temporal.start_url = categorias.id WHERE trim(temporal.start_url) like concat(trim(categorias.start_url),'%');
+  SELECT categorias.id FROM categorias INNER JOIN temporal on trim(temporal.start_url) like concat(trim(categorias.start_url),'%') limit 1 into categoria;
   
   -- inserto en la tabla insertions
-  INSERT INTO insertions (categoria_id) select distinct categoria_id from temporal limit 1;
+  INSERT INTO insertions (categoria_id) VALUES (categoria);
 
 
   --  --  creo la columna localidad para separar el campo "vendidos"
@@ -124,6 +126,7 @@ BEGIN
 -- --  hago trim en todas las columnas
 -- --  quito puntos de la columna precio
   UPDATE temporal SET
+		start_url = categoria,
 	  product_id = TRIM(product_id),
     precio = TRIM(precio),
     titulo = TRIM(titulo),
@@ -141,7 +144,7 @@ BEGIN
   
 
 
-  --  --   agrego las categorias que no existen
+  --  --   agrego las subcategorias que no existen
 INSERT IGNORE INTO subcategorias (name, categoria_id)
 select distinct trim(subcategoria) ,start_url from temporal
 WHERE trim(subcategoria) not like '';
@@ -176,14 +179,11 @@ UPDATE temporal
   SELECT DISTINCT start_url AS categoria_id, product_id, titulo AS title, precio AS price, vendidos AS sells, localidad AS location,subcategoria, url
   FROM temporal ORDER BY vendidos DESC LIMIT 999999;
   
-
-  --   --  Seteo que los productos cargados con url revisen si hay registros con el mismo product_id
-  --   --  y si lo hay, que les seteen la misma url.
-  --   UPDATE scrapes
-  --   LEFT JOIN temporal ON scrapes.product_id = temporal.product_id
-  --   SET scrapes.url = temporal.url
-  --   WHERE scrapes.product_id = temporal.product_id;
-  --   ;
+  -- caliento cache de general y de la categoria
+  CALL heat_cache_mejoresv(0);
+  CALL heat_cache_mejoresv(categoria);
+  CALL heat_categoria_cache(categoria);
+  CALL heat_totales_cache();
 
   -- -- RESTAURO LA SEGURIDAD
   SET SQL_SAFE_UPDATES = 1;
@@ -191,3 +191,135 @@ UPDATE temporal
 END $$
 
 DELIMITER ;
+
+-- -------------------------------- --
+-- CALENTAR CACHE - MEJORES VENDIDOS POR CATEGORIA- CATEGORIA 0 ES GENERAL
+DROP PROCEDURE IF EXISts heat_cache_mejoresv;
+DELIMITER $$
+
+CREATE PROCEDURE heat_cache_mejoresv(in cat_param int unsigned) 
+
+BEGIN
+SET SQL_SAFE_UPDATES = 0;
+
+DELETE FROM cache_bestSellers WHERE categoria_id = cat_param;
+
+INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
+          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido)
+        SELECT
+		 "dinero_movido" as criterio,
+          cat_param as categoria_id,
+         product_id,
+         title AS titulo,
+    	   url,
+         price AS precio,
+         location AS localidad,
+         DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
+         DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
+         CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS dias_periodo,
+         MAX(sells) - MIN(sells) AS ventas_periodo,
+         (MAX(sells) - MIN(sells)) * price AS dinero_movido
+        FROM scrapes AS s 
+        WHERE (cat_param = 0) OR (cat_param > 0  AND s.categoria_id = cat_param)
+  	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
+		ORDER BY dinero_movido desc, ventas_periodo desc
+		LIMIT 30;
+        
+INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
+          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido)
+        SELECT
+		 "ventas_periodo" as criterio,
+          cat_param as categoria_id,
+         product_id,
+         title AS titulo,
+    	   url,
+         price AS precio,
+         location AS localidad,
+         DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
+         DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
+         CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS dias_periodo,
+         MAX(sells) - MIN(sells) AS ventas_periodo,
+         (MAX(sells) - MIN(sells)) * price AS dinero_movido
+        FROM scrapes AS s 
+        WHERE (cat_param = 0) OR (cat_param > 0  AND s.categoria_id = cat_param)
+  	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
+		ORDER BY ventas_periodo desc, dinero_movido desc
+		LIMIT 30;        
+
+SET SQL_SAFE_UPDATES = 1;
+
+
+END $$
+
+DELIMITER ;
+-- ----------------- --
+-- fuerzzo el cache de todo
+-- -------------------------------- --
+-- CALENTAR CACHE DE TODAS LAS CATEGORIAS
+DROP PROCEDURE IF EXISts heat_all_bestsellers_cache;
+DELIMITER $$
+
+CREATE PROCEDURE heat_all_bestsellers_cache() 
+
+BEGIN
+
+DECLARE n INT DEFAULT 0;
+DECLARE i INT DEFAULT 0;
+declare cat int default 0;
+SELECT COUNT(*) FROM categorias INTO n;
+SET i=0;
+call heat_cache_mejoresv(0);
+WHILE i<n DO 
+  SELECT categorias.id from categorias order by 1 limit i,1 into cat;
+  call heat_cache_mejoresv(cat);
+  SET i = i + 1;
+END WHILE;
+
+END $$
+
+DELIMITER ;
+-- ----------------- --
+-- CALENTAR CACHE DE CATEGORIA
+DROP PROCEDURE IF EXISts heat_categoria_cache;
+DELIMITER $$
+
+CREATE PROCEDURE heat_categoria_cache(in categoria int unsigned) 
+
+
+BEGIN
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM cache_categorias WHERE (categoria = 0) OR (categoria>0 AND cache_categorias.categoria_id = categoria);
+
+INSERT INTO cache_categorias (categoria_id,nombre,productos,start_url,last_insert)
+SELECT c.id,c.name,count(distinct s.product_id) as registros, c.start_url, max(i.insertion_date) as last_insert
+FROM categorias as c
+INNER JOIN scrapes as s on s.categoria_id = c.id
+left join insertions as i on i.categoria_id = c.id 
+WHERE (categoria = 0) OR (categoria>0 AND c.id = categoria)
+group by c.id;
+SET SQL_SAFE_UPDATES = 1;
+END $$
+
+DELIMITER ;
+-- ------------------------------- --
+-- calentar cache totales
+DROP PROCEDURE IF EXISts heat_totales_cache;
+DELIMITER $$
+
+CREATE PROCEDURE heat_totales_cache() 
+
+BEGIN
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM cache_totales;
+
+INSERT INTO cache_totales (total_categorias,total_productos,total_scrapes)
+select count(distinct c.id) as total_categorias,
+	   count(distinct s.product_id) as total_productos,
+		count(distinct s.id) as total_scrapes
+FROM scrapes as s
+LEFT JOIN categorias as c on c.id = s.categoria_id;
+SET SQL_SAFE_UPDATES = 1;
+END $$
+
+DELIMITER ;
+

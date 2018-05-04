@@ -1,6 +1,9 @@
 *{
   box-sizing: border-box;
 }
+body{
+  max-width: 95vw;
+}
 
 menu ul li a{
   color:black;
@@ -159,7 +162,7 @@ table th {
   footer{grid-area:footer}
 
   body{
-    max-width: 1400px;
+
     padding: 20px;
     display: grid;
     grid-template-columns: repeat(4,25%);

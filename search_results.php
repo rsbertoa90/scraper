@@ -15,7 +15,7 @@ if (isset($_GET["max"]) && trim($_GET["max"]))
   ProductossetPrecioMaximo($_GET["max"]);
 }
 
-if( isset($_POST["vendidos"] ) ) {ProductossetCriterio("vendidos");}
+if( isset($_POST["ventas_periodo"] ) ) {Productos::setCriterio("ventas_periodo");}
 else{ Productos::setCriterio("dinero_movido"); }
 
 $results = Productos::search($_GET["search"]);
@@ -37,12 +37,12 @@ $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_per
 
       <!-- botones para ordernar por vendidos o por monto en dinero -->
       <form class="" action="" method="POST">
-        <?php if (Productos::$criterio_ordenamiento == "vendidos"): ?>
+        <?php if (Productos::$criterio_ordenamiento == "ventas_periodo"): ?>
           <button type="submit" class= "enabled" >Ordernar por dinero movido</button>
-          <button class= "disabled" type="submit" name="vendidos" value="1" disabled>Ordenar por cantidad de vendidos</button>
+          <button class= "disabled" type="submit" name="ventas_periodo" value="1" disabled>Ordenar por cantidad de vendidos</button>
         <?php else: ?>
           <button type="submit" class ="disabled" disabled>Ordernar por dinero movido</button>
-          <button type="submit" class= "enabled" name="vendidos" value="1" >Ordenar por cantidad de vendidos</button>
+          <button type="submit" class= "enabled" name="ventas_periodo" value="1" >Ordenar por cantidad de vendidos</button>
       <?php endif ?>
       </form>
 
