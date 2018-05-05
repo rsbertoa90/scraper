@@ -9,7 +9,7 @@ require_once("clases/producto.php");
 require_once("clases/categoria.php");
 
 $categoria = new Categoria();
-$categoria->getById($_GET["id"]);
+$categoria = Categorias::getById($_GET["id"]);
 
 
   $headers=["localidad","titulo","precio","inicio periodo","fin periodo","dias periodo","vendidos periodo","dinero movido"];

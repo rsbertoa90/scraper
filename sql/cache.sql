@@ -65,7 +65,24 @@ create table cache_totales
 
 
 
-
+SELECT
+		 "dinero_movido" as criterio,
+          2 as categoria_id,
+         product_id,
+         title AS titulo,
+    	   url,
+         price AS precio,
+         location AS localidad,
+         DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
+         DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
+         CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS dias_periodo,
+         MAX(sells) - MIN(sells) AS ventas_periodo,
+         (MAX(sells) - MIN(sells)) * price AS dinero_movido
+        FROM scrapes AS s 
+        WHERE (2 = 0) OR (2 > 0  AND s.categoria_id = 2)
+  	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
+		ORDER BY dinero_movido desc, ventas_periodo desc
+		LIMIT 30;
 -- 
 -- -- restore from cache
 -- select product_id, localidad, titulo, precio, inicio_periodo, fin_periodo, vendidos_periodo, dinero_movido

@@ -193,9 +193,13 @@ END $$
 DELIMITER ;
 
 -- -------------------------------- --
+select * from cache_bestSellers where categoria_id = 2;
+
+CALL heat_cache_mejoresv(2);
 -- CALENTAR CACHE - MEJORES VENDIDOS POR CATEGORIA- CATEGORIA 0 ES GENERAL
 DROP PROCEDURE IF EXISts heat_cache_mejoresv;
 DELIMITER $$
+
 
 CREATE PROCEDURE heat_cache_mejoresv(in cat_param int unsigned) 
 
@@ -293,14 +297,16 @@ DELETE FROM cache_categorias WHERE (categoria = 0) OR (categoria>0 AND cache_cat
 INSERT INTO cache_categorias (categoria_id,nombre,productos,start_url,last_insert)
 SELECT c.id,c.name,count(distinct s.product_id) as registros, c.start_url, max(i.insertion_date) as last_insert
 FROM categorias as c
-INNER JOIN scrapes as s on s.categoria_id = c.id
-left join insertions as i on i.categoria_id = c.id 
+LEFT JOIN scrapes as s on s.categoria_id = c.id
+LEFT join insertions as i on i.categoria_id = c.id 
 WHERE (categoria = 0) OR (categoria>0 AND c.id = categoria)
 group by c.id;
 SET SQL_SAFE_UPDATES = 1;
 END $$
 
 DELIMITER ;
+
+
 -- ------------------------------- --
 -- calentar cache totales
 DROP PROCEDURE IF EXISts heat_totales_cache;
@@ -318,6 +324,34 @@ select count(distinct c.id) as total_categorias,
 		count(distinct s.id) as total_scrapes
 FROM scrapes as s
 LEFT JOIN categorias as c on c.id = s.categoria_id;
+SET SQL_SAFE_UPDATES = 1;
+END $$
+
+DELIMITER ;
+
+
+-- -------------------------------- --
+-- BORRAR CATEGORIA EN CASCADA
+-- SETEA SUBCATEGORIA EN NULO
+DROP PROCEDURE IF EXISts delete_categoria;
+DELIMITER $$
+
+CREATE PROCEDURE delete_categoria(in categoria int unsigned) 
+
+
+BEGIN
+SET SQL_SAFE_UPDATES = 0;
+
+DELETE FROM cache_categorias WHERE cache_categorias.categoria_id = categoria;
+
+update scrapes 
+inner join subcategorias on subcategorias.id = scrapes.subcategoria_id
+set subcategoria_id = null where subcategorias.categoria_id = categoria;
+ 
+delete from insertions where categoria_id = categoria;
+delete from subcategorias where categoria_id = categoria;
+delete from categorias where id = categoria;
+
 SET SQL_SAFE_UPDATES = 1;
 END $$
 

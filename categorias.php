@@ -16,7 +16,7 @@ if ($_POST){
   if(!trim($newCat->name) || !trim($newCat->start_url)){
     $mensajes="Error - Los campos no pueden estar vacios";
   }else{
-    $mensajes=$newCat->guardar();
+    $mensajes=Categorias::guardar($newCat);
     if(!$mensajes){
       header("location: categorias.php?m=1");
       exit;
@@ -29,7 +29,7 @@ if(isset($_GET["action"])){
   if($_GET["action"]=="borrar"){
 
     $categoria = new Categoria($_GET["id"]);
-    $mensajes = $categoria->borrar();
+    $mensajes = Categorias::borrar($categoria);
     if (!$mensajes){
       header("location: categorias.php?b=1");
     }
