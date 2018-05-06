@@ -65,5 +65,7 @@ $categoria = Categorias::getById($_GET["id"]);
       </table>
     </main>
 
+  
+
   </body>
 </html>

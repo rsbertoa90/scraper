@@ -11,6 +11,7 @@ $productos = new Productos();
 
 if (isset($_FILES["archivo"]))
 {
+
     $mensajes = $productos->importar($_FILES["archivo"]);
     if (!$mensajes)
     {
@@ -43,13 +44,13 @@ if (isset($_GET["share"])){ $mensajes="SHARED!"; }
   <body>
   <?php require_once("partials/header.php") ?>
   <?php require_once("partials/menu.php") ?>
-  <main>
+  <main id = "upload">
     <div>
       <h1>IMPORTAR ARCHIVO DE DATOS DE SCRAP</h1>
       <h2>  <span class="error-message"><?=$mensajes?></span> </h2>
     </div>
 
-    <form class="" action="import.php" method="post" enctype="multipart/form-data">
+    <form class="" action="import.php" method="post" enctype="multipart/form-data" id="uploadForm">
       <!-- <div class="form-block">
         <select name="categoria">
           <option value="NULL"> Elige una categoria </option>
@@ -73,5 +74,6 @@ if (isset($_GET["share"])){ $mensajes="SHARED!"; }
     <button type="button" name="button"></button>
 
   </main>
-  </body>
+  <?php require_once("partials/js-import.php") ?>
+</body>
 </html>

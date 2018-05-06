@@ -435,8 +435,7 @@
           $producto = new Producto();
 
           $producto->fecha_insert = $row["fecha_insert"];
-          $producto->categoria = new Categoria();
-          $producto->categoria->getById($row["categoria_id"]);
+          $producto->categoria = Categorias::getById($row["categoria_id"]);
           $producto->titulo = $row["titulo"];
           $producto->precio = $row["precio"];
           $producto->ventas = $row["ventas"];
