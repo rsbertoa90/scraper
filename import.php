@@ -9,6 +9,14 @@ if(!isset($categorias)){$categorias= Categorias::getAll();}
 $mensajes="";
 $productos = new Productos();
 
+
+
+if (isset($_GET["m"])){$mensajes="IMPORTACION EXITOSA!";}
+
+
+
+if (isset($_GET["share"])){ $mensajes="SHARED!"; }
+
 if (isset($_FILES["archivo"]))
 {
 
@@ -19,8 +27,6 @@ if (isset($_FILES["archivo"]))
       exit;
     }
 }
-
-if (isset($_GET["m"])){$mensajes="IMPORTACION EXITOSA!";}
 
 if(isset($_POST["share"]))
 {
@@ -33,18 +39,17 @@ if(isset($_POST["share"]))
 
 }
 
-if (isset($_GET["share"])){ $mensajes="SHARED!"; }
-
-
 ?>
 
 <!DOCTYPE html>
+
 <html>
   <?php require_once("partials/head.php") ?>
   <body>
   <?php require_once("partials/header.php") ?>
   <?php require_once("partials/menu.php") ?>
   <main id = "upload">
+    
     <div>
       <h1>IMPORTAR ARCHIVO DE DATOS DE SCRAP</h1>
       <h2>  <span class="error-message"><?=$mensajes?></span> </h2>

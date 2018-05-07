@@ -14,7 +14,13 @@
 
 
 
+    static public function setPrecioMaximo($precio){
+      self::$precio_maximo=$precio;
+    }
 
+    static public function setPrecioMinimo($precio){
+      self::$precio_minimo=$precio;
+    }
 
     //setter criterio
     static public function setCriterio($criterio)

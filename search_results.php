@@ -8,11 +8,11 @@ require_once("clases/producto.php");
 
 if (isset($_GET["min"]) && trim($_GET["min"]))
 {
-  ProductossetPrecioMinimo($_GET["min"]);
+  Productos::setPrecioMinimo($_GET["min"]);
 }
 if (isset($_GET["max"]) && trim($_GET["max"]))
 {
-  ProductossetPrecioMaximo($_GET["max"]);
+  Productos::setPrecioMaximo($_GET["max"]);
 }
 
 if( isset($_POST["ventas_periodo"] ) ) {Productos::setCriterio("ventas_periodo");}

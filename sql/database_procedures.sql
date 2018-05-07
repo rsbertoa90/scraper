@@ -227,7 +227,7 @@ INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
         WHERE (cat_param = 0) OR (cat_param > 0  AND s.categoria_id = cat_param)
   	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
 		ORDER BY dinero_movido desc, ventas_periodo desc
-		LIMIT 30;
+		LIMIT 100;
         
 INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
           titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido)
@@ -248,7 +248,7 @@ INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
         WHERE (cat_param = 0) OR (cat_param > 0  AND s.categoria_id = cat_param)
   	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
 		ORDER BY ventas_periodo desc, dinero_movido desc
-		LIMIT 30;        
+		LIMIT 100;        
 
 SET SQL_SAFE_UPDATES = 1;
 
