@@ -49,7 +49,7 @@ if(isset($_POST["share"]))
   <?php require_once("partials/header.php") ?>
   <?php require_once("partials/menu.php") ?>
   <main id = "upload">
-    
+
     <div>
       <h1>IMPORTAR ARCHIVO DE DATOS DE SCRAP</h1>
       <h2>  <span class="error-message"><?=$mensajes?></span> </h2>
@@ -80,5 +80,6 @@ if(isset($_POST["share"]))
 
   </main>
   <?php require_once("partials/js-import.php") ?>
+  
 </body>
 </html>
