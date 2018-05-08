@@ -193,9 +193,7 @@ END $$
 DELIMITER ;
 
 -- -------------------------------- --
-select * from cache_bestSellers where categoria_id = 2;
 
-CALL heat_cache_mejoresv(2);
 -- CALENTAR CACHE - MEJORES VENDIDOS POR CATEGORIA- CATEGORIA 0 ES GENERAL
 DROP PROCEDURE IF EXISts heat_cache_mejoresv;
 DELIMITER $$
@@ -209,44 +207,48 @@ SET SQL_SAFE_UPDATES = 0;
 DELETE FROM cache_bestSellers WHERE categoria_id = cat_param;
 
 INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
-          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido)
+          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido,favorito)
         SELECT
 		 "dinero_movido" as criterio,
           cat_param as categoria_id,
-         product_id,
-         title AS titulo,
-    	   url,
-         price AS precio,
-         location AS localidad,
-         DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
-         DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
-         CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS dias_periodo,
-         MAX(sells) - MIN(sells) AS ventas_periodo,
-         (MAX(sells) - MIN(sells)) * price AS dinero_movido
+         s.product_id,
+         s.title AS titulo,
+    	   s.url,
+         s.price AS precio,
+         s.location AS localidad,
+         DATE_FORMAT(MIN(s.data_date), '%d/%m/%Y') as inicio_periodo,
+         DATE_FORMAT(MAX(s.data_date), '%d/%m/%Y') as fin_periodo,
+         CONCAT(TIMESTAMPDIFF(DAY, MIN(s.data_date), MAX(s.data_date)),' dias')  AS dias_periodo,
+         MAX(s.sells) - MIN(s.sells) AS ventas_periodo,
+         (MAX(s.sells) - MIN(s.sells)) * price AS dinero_movido,
+         (if (f.id is not null, 1 , 0 ) ) as favorito
         FROM scrapes AS s 
+        left join favoritos as f on f.product_id = s.product_id
         WHERE (cat_param = 0) OR (cat_param > 0  AND s.categoria_id = cat_param)
-  	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
+  	    GROUP BY product_id HAVING COUNT(s.product_id) > 1 AND dias_periodo > 0 
 		ORDER BY dinero_movido desc, ventas_periodo desc
 		LIMIT 100;
         
 INSERT INTO cache_bestSellers (criterio,categoria_id,product_id,
-          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido)
+          titulo, url, precio, localidad, inicio_periodo, fin_periodo, dias_periodo,ventas_periodo,dinero_movido,favorito)
         SELECT
 		 "ventas_periodo" as criterio,
           cat_param as categoria_id,
-         product_id,
-         title AS titulo,
-    	   url,
-         price AS precio,
-         location AS localidad,
-         DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
-         DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
-         CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS dias_periodo,
-         MAX(sells) - MIN(sells) AS ventas_periodo,
-         (MAX(sells) - MIN(sells)) * price AS dinero_movido
+         s.product_id,
+         s.title AS titulo,
+    	   s.url,
+         s.price AS precio,
+         s.location AS localidad,
+         DATE_FORMAT(MIN(s.data_date), '%d/%m/%Y') as inicio_periodo,
+         DATE_FORMAT(MAX(s.data_date), '%d/%m/%Y') as fin_periodo,
+         CONCAT(TIMESTAMPDIFF(DAY, MIN(s.data_date), MAX(s.data_date)),' dias')  AS dias_periodo,
+         MAX(s.sells) - MIN(s.sells) AS ventas_periodo,
+         (MAX(sells) - MIN(sells)) * price AS dinero_movido,
+         (if (f.id is not null, 1 , 0 ) ) as favorito
         FROM scrapes AS s 
+        left join favoritos as f on f.product_id = s.product_id
         WHERE (cat_param = 0) OR (cat_param > 0  AND s.categoria_id = cat_param)
-  	   GROUP BY product_id HAVING COUNT(product_id) > 1 AND dias_periodo > 0 
+  	   GROUP BY product_id HAVING COUNT(s.product_id) > 1 AND dias_periodo > 0 
 		ORDER BY ventas_periodo desc, dinero_movido desc
 		LIMIT 100;        
 
@@ -356,4 +358,3 @@ SET SQL_SAFE_UPDATES = 1;
 END $$
 
 DELIMITER ;
-

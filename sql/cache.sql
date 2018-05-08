@@ -28,7 +28,8 @@ create table cache_bestSellers
 		fin_periodo varchar(10) not null,
 		dias_periodo varchar(20) not null,
 		ventas_periodo int(10) unsigned not null,
-		dinero_movido int(10) unsigned not null
+		dinero_movido int(10) unsigned not null,
+        favorito tinyint(1)
 );
 
 

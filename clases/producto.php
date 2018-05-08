@@ -1,10 +1,10 @@
 <?php
   require_once("categoria.php");
   require_once("subcategoria.php");
-  require_once("sql/conection.php");
+  require_once("DataBase.php");
 
 
-  class productos
+  abstract class productos
 
   {
 
@@ -40,7 +40,7 @@
 
       $searchArray = preg_split('/\s+/', $search);
 
-      $DB=conect();
+      $DB=DataBase::conect();
 
 
       $queryText="SELECT
@@ -53,7 +53,11 @@
             DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
             DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
               CAST( (MAX(sells) - MIN(sells)) AS UNSIGNED) AS ventas_en_periodo,
-              CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS periodo_en_dias,
+              CO
+  function getFrom($get,$from,$id)
+  {
+
+  }NCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS periodo_en_dias,
             CAST( ( (MAX(sells) - MIN(sells)) * price) AS UNSIGNED) AS dinero_movido
         FROM scrapes AS s
         INNER JOIN categorias AS c ON s.categoria_id = c.id
@@ -94,6 +98,7 @@
           $producto = new Producto();
 
           $producto->product_id = $row["product_id"];
+
           $producto->url = $row["url"];
           $producto->categoria = new Categoria($row["categoria"]);
         	$producto->titulo = $row["titulo"];
@@ -175,7 +180,7 @@
 
       move_uploaded_file($archivo["tmp_name"], $path);
 
-      $DB = conect();
+      $DB = DataBase::conect();
 
 
       $queryes = self::importQuery();
@@ -195,7 +200,11 @@
           $DB->rollBack();
           return "--- ERROR EN MULTIQUERY: --".$e->getMessage();
       }
-      unlink("imports/temp-import.csv");
+      unlink("impo
+  function getFrom($get,$from,$id)
+  {
+
+  }rts/temp-import.csv");
       return '';
 
     }
@@ -204,7 +213,7 @@
     // Toma los registros en scrapes que no tienen url, se fija si hay registros con el mismo product_id que si tengan y los que tienen les comparten a los que no.
     static public function share()
     {
-      $DB = conect();
+      $DB = DataBase::conect();
       $queryText[] = "SET SQL_SAFE_UPDATES = 0;";
       $queryText[]=  "UPDATE scrapes AS s
         LEFT JOIN (SELECT DISTINCT product_id,url,subcategoria_id FROM scrapes WHERE url IS NOT NULL ) AS a
@@ -229,6 +238,10 @@
       return $e->getMessage();
       }
     }
+  function getFrom($get,$from,$id)
+  {
+
+  }
 
 
 
@@ -237,7 +250,7 @@
     // devuelve el total de registros de la tabla scrapes
     static public function totales()
     {
-      $DB=conect();
+      $DB=DataBase::conect();
 
       $queryText="SELECT total_scrapes,total_productos,total_categorias from cache_totales";
 
@@ -256,11 +269,11 @@
 
 
     // Tomo mejores vendidos por categoria de la cache.
-    static public function bestSellers($categoria_id)
+    static public function bestSellers(int $categoria_id)
     {
-      $DB=conect();
+      $DB=DataBase::conect();
 
-      $queryText = "SELECT product_id,categoria_id,url, localidad, titulo, precio, inicio_periodo, fin_periodo,dias_periodo, ventas_periodo, dinero_movido
+      $queryText = "SELECT product_id,categoria_id,url, localidad, titulo, precio, inicio_periodo, fin_periodo,dias_periodo, ventas_periodo, dinero_movido,favorito
       FROM cache_bestSellers
       WHERE criterio = :criterio
       AND categoria_id = :categoria
@@ -302,6 +315,8 @@
           $producto->ventas_en_periodo =$row["ventas_periodo"];
           $producto->dias_periodo =$row["dias_periodo"];
           $producto->dinero_movido =$row["dinero_movido"];
+          $producto->EsFavorito = $row["favorito"];
+
           $bestSellers[]=$producto;
         }
         return $bestSellers;
@@ -312,7 +327,7 @@
 
     public function deleteLastInsert()
     {
-      $DB->conect();
+      $DB->DataBase::conect();
       $queryText="CALL delete_last_insert()";
       try
       {
@@ -354,6 +369,7 @@
     public $dinero_movido;
     public $ventas_total;
     public $ventas_en_periodo;
+    public $EsFavorito=0;
 
 
 
@@ -381,11 +397,85 @@
         $this->ventas_total="";
         $this->ventas_en_periodo="";
 
+
       }
+  // agregar producto a favoritos, o sacarlo si ya es.
+      public function favorito()
+      {
+        $DB = DataBase::conect();
+        try {
+          $query = $DB->prepare("SELECT id FROM favoritos WHERE product_id = :id");
+          $query->bindValue(":id",$this->product_id,PDO::PARAM_STR);
+          $query->execute();
+          $result=$query->fetch(PDO::FETCH_ASSOC);
+        }
+        catch (PDOException $e) { return $e->getMessage(); }
+        if ($result["id"])
+        {
+          $this->quitarFavorito();
+        }
+        else
+        {
+          $this->agregarFavorito();
+        }
+    }
+
+    private function agregarFavorito()
+      {
+        $DB=DataBase::conect();
+        $this->EsFavorito = 1;
+        try
+        {
+          $DB->beginTransaction();
+          $query = $DB->prepare("INSERT INTO favoritos(product_id) VALUES (:id)");
+          $query->bindValue(":id",$this->product_id,PDO::PARAM_STR);
+          $query->execute();
+          $DB->commit();
+        }
+        catch (PDOException $e) { $DB->rollBack(); return $e->getMessage(); }
+        try
+        {
+          $DB->beginTransaction();
+          $query = $DB->prepare("UPDATE cache_bestSellers SET favorito = 1 WHERE product_id = :id");
+          $query->bindValue(":id",$this->product_id,PDO::PARAM_STR);
+          $query->execute();
+          $DB->commit();
+        }
+        catch (PDOException $e) { $DB->rollBack(); return $e->getMessage(); }
+
+      }
+
+      private function quitarFavorito()
+      {
+        $DB=DataBase::conect();
+        $this->EsFavorito=0;
+        try
+        {
+          $DB->beginTransaction();
+          $query = $DB->prepare("DELETE FROM favoritos WHERE product_id=:id");
+          $query->bindValue(":id",$this->product_id,PDO::PARAM_STR);
+          $query->execute();
+          $DB->commit();
+        }
+        catch (PDOException $e) { $DB->rollBack(); return $e->getMessage(); }
+        try
+        {
+          $DB->beginTransaction();
+          $query = $DB->prepare("UPDATE cache_bestSellers SET favorito=0 WHERE product_id = :id");
+          $query->bindValue(":id",$this->product_id,PDO::PARAM_STR);
+          $query->execute();
+          $DB->commit();
+        }
+        catch (PDOException $e) { $DB->rollBack(); return $e->getMessage(); }
+
+
+      }
+
+
 
       public function totales()
       {
-        $DB=conect();
+        $DB=DataBase::conect();
 
         $queryText = 'SELECT
             product_id,
@@ -415,7 +505,7 @@
 
       public function historicos()
       {
-        $DB = conect();
+        $DB = DataBase::conect();
         $queryText='SELECT DATE_FORMAT(s.data_date,"%d/%m/%Y" ) AS fecha_insert,
         categoria_id ,
         s.url ,

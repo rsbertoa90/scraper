@@ -1,8 +1,8 @@
 <?php
-require_once("sql/conection.php");
+require_once("DataBase.php");
 
 //clase plural. el construtor trae la lista completa.
-class Categorias
+abstract class Categorias
 {
 
 
@@ -11,7 +11,7 @@ class Categorias
   //dando un id trae el objeto categoria
   public static function getById($id)
   {
-      $DB = conect();
+      $DB = DataBase::conect();
       try
       {
         $qt = "SELECT id,name from categorias WHERE id = :id";
@@ -35,7 +35,7 @@ class Categorias
   // Devuelve un array con todas las categorias, todas con la cantidad de registros en scrap que tiene cada una.
   static public function getAll()
   {
-    $DB = conect();
+    $DB = DataBase::conect();
     try
     {
 
@@ -73,7 +73,7 @@ class Categorias
 //refresca el cache de todas las categorias
   static public function heatCache($id)
   {
-    $DB = conect();
+    $DB = DataBase::conect();
     $queryText = "CALL heat_categoria_cache(:id)";
     try
     {
@@ -93,7 +93,7 @@ class Categorias
   //lo usa solo la funcion borrar
  static private function tieneHijos($categoria)
   {
-    $DB = conect();
+    $DB = DataBase::conect();
     $queryText = 'SELECT * FROM scrapes WHERE categoria_id = :id';
     try {
       $query = $DB->prepare($queryText);
@@ -124,7 +124,7 @@ class Categorias
   //lo usa solo la funcion  borrar
   private static function deleteCategoria($categoria)
   {
-    $DB = conect();
+    $DB = DataBase::conect();
     $queryText=' CALL delete_categoria(:id) ';
     try {
       $DB->beginTransaction();
@@ -145,7 +145,7 @@ class Categorias
   // devuelve una categoria si existe, un objeto vacio si no.
   private static function existeCategoria($categoria)
   {
-    $DB = conect();
+    $DB = DataBase::conect();
     $queryText = 'SELECT id FROM categorias WHERE TRIM(name) like :categoria ';
     try {
       $query = $DB->prepare($queryText);
@@ -162,7 +162,7 @@ class Categorias
   // hace un insert de nueva categoria en la tabla categorias
   private static function insertCategoria($categoria)
   {
-    $DB = conect();
+    $DB = DataBase::conect();
     $queryText='INSERT INTO categorias(name,start_url) VALUES (:categoria,:url)';
     try {
       $DB->beginTransaction();

@@ -1,9 +1,10 @@
 <?php
 
 //clase plural. el construtor trae la lista completa.
-class subcategorias{
+abstract class subcategorias
+{
 
-  public function getAll(){
+  public static function getAll(){
     $DB = new connection();
     try {
       $qt = "SELECT id,categoria_id,name from subcategorias" ;

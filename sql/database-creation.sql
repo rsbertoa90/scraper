@@ -47,6 +47,15 @@ CREATE TABLE scrapes (
 ) ENGINE=InnoDB AUTO_INCREMENT=351720;
 
 
+CREATE TABLE favoritos 
+(
+	 id int(15) unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
+     data_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     product_id varchar(100) not null
+
+);
+
+select * from favoritos;
 
 
 
