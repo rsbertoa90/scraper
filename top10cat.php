@@ -13,14 +13,14 @@ $categoria = Categorias::getById($_GET["id"]);
 
 
   $headers=["localidad","titulo","precio","inicio periodo","fin periodo","dias periodo","vendidos periodo","dinero movido"];
-  $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_periodo","ventas_en_periodo","dinero_movido"];
+  $indexes=["localidad","titulo","precio","inicio_periodo","fin_periodo","dias_periodo","ventas_periodo","dinero_movido"];
 
 
   if (isset($_POST["ventas_periodo"])){Productos::setCriterio("ventas_periodo");}
   else{Productos::setCriterio("dinero_movido");}
 
-  if ($categoria)
-  $top10 = Productos::bestSellers($_GET["id"]);
+
+  $productos = Productos::bestSellers($_GET["id"]);
 
  ?>
 

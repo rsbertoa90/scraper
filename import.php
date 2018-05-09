@@ -7,7 +7,7 @@ if(!isset($categorias)){$categorias= Categorias::getAll();}
 
 
 $mensajes="";
-$productos = new Productos();
+
 
 
 
@@ -20,7 +20,7 @@ if (isset($_GET["share"])){ $mensajes="SHARED!"; }
 if (isset($_FILES["archivo"]))
 {
 
-    $mensajes = $productos->importar($_FILES["archivo"]);
+    $mensajes = Productos::importar($_FILES["archivo"]);
     if (!$mensajes)
     {
       header("location: import.php?m=1");
@@ -30,7 +30,7 @@ if (isset($_FILES["archivo"]))
 
 if(isset($_POST["share"]))
 {
-    $mensajes = $productos->share();
+    $mensajes = Productos::share();
     if(!$mensajes)
     {
       header("location: import.php?share=true");
@@ -80,6 +80,6 @@ if(isset($_POST["share"]))
 
   </main>
   <?php require_once("partials/js-import.php") ?>
-  
+
 </body>
 </html>

@@ -7,6 +7,7 @@ if(!isset($categorias)){$categorias=Categorias::getAll();}
     <ul>
       <li class="menu-item"> <a href="categorias.php">ADMINISTRAR CATEGORIAS</a> </li>
       <li class="menu-item"> <a href="import.php">IMPORTAR CSV</a> </li>
+      <li class="menu-item"> <a href="favoritos.php">FAVORITOS</a> </li>
       <li class="menu-item"> <h3> MEJORES VENDIDOS </h3>
         <ul>
           <?php foreach ($categorias as $cat): ?>

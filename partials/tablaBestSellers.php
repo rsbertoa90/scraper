@@ -18,7 +18,7 @@
       </th>
     <?php endforeach; ?>
   </tr>
-  <?php foreach ($top10 as $item): ?>
+  <?php foreach ($productos as $item): ?>
 
     <tr>
       <?php foreach ($indexes as $index): ?>

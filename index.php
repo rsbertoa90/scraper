@@ -20,16 +20,13 @@ require_once("clases/categoria.php");
   else{Productos::setCriterio("dinero_movido");}
 
 
-  if(!isset($top10))
-  {
-    $top10 = Productos::bestSellers(0);
-  }
-  $mensajes="";
+
+  $productos = Productos::bestSellers(0);
 
 
   //para la tabla de mejores vendidos
   $headers=["localidad","titulo","precio","dias periodo","vendidos periodo","dinero movido"];
-  $indexes=["localidad","titulo","precio","dias_periodo","ventas_en_periodo","dinero_movido"];
+  $indexes=["localidad","titulo","precio","dias_periodo","ventas_periodo","dinero_movido"];
 
 
 
@@ -89,42 +86,13 @@ require_once("clases/categoria.php");
       <div class="tabla">
         <h3>Mejor vendidos</h3>
 
-              <!-- botones para ordernar por vendidos o por monto en dinero -->
-              <form class="" action="index.php" method="GET">
-              <?php if (Productos::$criterio_ordenamiento == "ventas_periodo"): ?>
-                  <button type="submit" class="enabled" >Ordernar por dinero movido</button>
-                  <button class= "disabled" type="submit" name="ventas_periodo" value="1" disabled>Ordenar por cantidad de vendidos</button>
-              <?php else: ?>
-                  <button type="submit" class ="disabled" disabled>Ordernar por dinero movido</button>
-                  <button type="submit" name="ventas_periodo" class="enabled" value="1" >Ordenar por cantidad de vendidos</button>
-              <?php endif ?>
-              </form>
-
-        <table>
-          <tr>
-            <?php foreach ($headers as $header): ?>
-              <th>
-                <?=$header?>
-              </th>
-            <?php endforeach; ?>
-          </tr>
-
-          <?php foreach ($top10 as $item): ?>
-            <?php if(trim($item->url)){$item->titulo="<a target='_blank' href='{$item->url}'> {$item->titulo} </a>";} ?>
-            <tr>
-              <?php foreach ($indexes as $index): ?>
-                <td><?=$item->$index?></td>
-              <?php endforeach; ?>
-              <td> <a href="historico.php?product_id=<?=$item->product_id?>">[ver historico]</a></td>
-            </tr>
-          <?php endforeach; ?>
-        </table>
+        <?php require_once("partials/tablaBestSellers.php") ?>
       </div>
 
 
 
 
     </main>
-
+    <?php require_once("partials/js-import.php") ?>
   </body>
 </html>

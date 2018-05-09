@@ -32,9 +32,93 @@
     }
 
 
+    static public function favoritos()
+    {
+      $DB=DataBase::conect();
+
+
+      $queryText="SELECT
+          s.product_id,
+          url,
+          s.categoria_id AS categoria,
+          s.title AS titulo,
+            s.price AS precio,
+            s.location AS localidad,
+            DATE_FORMAT(MIN(s.data_date), '%d/%m/%Y') as inicio_periodo,
+            DATE_FORMAT(MAX(s.data_date), '%d/%m/%Y') as fin_periodo,
+              CAST( (MAX(s.sells) - MIN(s.sells)) AS UNSIGNED) AS ventas_periodo,
+              CONCAT(TIMESTAMPDIFF(DAY, MIN(s.data_date), MAX(s.data_date)),' dias')  AS dias_periodo,
+            CAST( ( (MAX(sells) - MIN(sells)) * price) AS UNSIGNED) AS dinero_movido,
+            1 as favorito
+        FROM scrapes AS s
+        INNER JOIN favoritos as f ON f.product_id = s.product_id
+        GROUP BY s.product_id HAVING COUNT(s.product_id) > 1 AND dias_periodo > 0 ";
+      if(self::$criterio_ordenamiento=="ventas_periodo"){ $queryText.="  ORDER BY ventas_periodo desc, dinero_movido desc"; }
+      else{ $queryText.="  ORDER BY dinero_movido desc, ventas_periodo desc"; }
+
+      try
+      {
+          $query= $DB->prepare($queryText);
+          $query->execute();
+          $result = $query->fetchAll(PDO::FETCH_ASSOC);
+      }
+      catch (PDOException $e) {return "ERROR --> ".$e->getMessage();}
+
+      $favoritos = [];
+      foreach ($result as $row)
+      {
+          $producto = new Producto();
+          $producto->loadFromArray($row);
+          $favoritos[]=$producto;
+      }
+      return $favoritos;
+    }
+
+    // Tomo mejores vendidos por categoria de la cache.
+    static public function bestSellers(int $categoria_id)
+    {
+      $DB=DataBase::conect();
+
+      $queryText = "SELECT product_id,categoria_id as categoria,url, localidad, titulo, precio, inicio_periodo, fin_periodo,dias_periodo, ventas_periodo, dinero_movido,favorito
+      FROM cache_bestSellers
+      WHERE criterio = :criterio
+      AND categoria_id = :categoria
+      "
+      ;
+
+      if (trim(self::$criterio_ordenamiento)=="ventas_periodo"){
+        $queryText.=' ORDER BY ventas_periodo desc, dinero_movido desc ';
+      }else{
+        $queryText.=' ORDER BY dinero_movido desc, ventas_periodo desc ';
+      }
+
+        try
+        {
+          $query= $DB->prepare($queryText);
+          $query->bindValue(':criterio',self::$criterio_ordenamiento,PDO::PARAM_STR);
+          $query->bindValue(':categoria',$categoria_id,PDO::PARAM_INT);
+
+          $query->execute();
+          $result = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        }
+        catch (PDOException $e)
+        {
+          return "ERROR --> ".$e->getMessage();
+        }
+        $bestSellers=[];
+        foreach ($result as $row)
+        {
+          $producto = new Producto();
+          $producto->loadFromArray($row);
+          $bestSellers[]=$producto;
+        }
+        return $bestSellers;
+    }
+
+
     // busco los resultados de todos los productos que coincidan en titulo con lo buscado
     // ordenado por dinero movido, y con limite de 30;
-
     static public function search($search)
     {
 
@@ -44,32 +128,28 @@
 
 
       $queryText="SELECT
-          product_id,
+          s.product_id,
           url,
-        	c.name AS categoria,
+        	s.categoria_id AS categoria,
         	title AS titulo,
             price AS precio,
             location AS localidad,
-            DATE_FORMAT(MIN(data_date), '%d/%m/%Y') as inicio_periodo,
-            DATE_FORMAT(MAX(data_date), '%d/%m/%Y') as fin_periodo,
-              CAST( (MAX(sells) - MIN(sells)) AS UNSIGNED) AS ventas_en_periodo,
-              CO
-  function getFrom($get,$from,$id)
-  {
-
-  }NCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date)),' dias')  AS periodo_en_dias,
-            CAST( ( (MAX(sells) - MIN(sells)) * price) AS UNSIGNED) AS dinero_movido
+            DATE_FORMAT(MIN(s.data_date), '%d/%m/%Y') as inicio_periodo,
+            DATE_FORMAT(MAX(s.data_date), '%d/%m/%Y') as fin_periodo,
+              CAST( (MAX(sells) - MIN(sells)) AS UNSIGNED) AS ventas_periodo,
+              CONCAT(TIMESTAMPDIFF(DAY, MIN(s.data_date), MAX(s.data_date)),' dias')  AS dias_periodo,
+            CAST( ( (MAX(sells) - MIN(sells)) * price) AS UNSIGNED) AS dinero_movido,
+            (if (f.id is not null, 1 , 0 ) ) as favorito
         FROM scrapes AS s
-        INNER JOIN categorias AS c ON s.categoria_id = c.id
-
+        LEFT JOIN favoritos as f ON f.product_id = s.product_id
         WHERE price BETWEEN :min AND :max ";
 
       foreach ($searchArray as $key => $value) {$queryText.=" AND title like concat('%',:{$key},'%') "; }
 
-      $queryText.=" GROUP BY product_id HAVING COUNT(product_id) > 1 AND periodo_en_dias > 0 ";
+      $queryText.=" GROUP BY s.product_id HAVING COUNT(s.product_id) > 1 AND dias_periodo > 0 ";
 
-      if(self::$criterio_ordenamiento=="ventas_periodo"){ $queryText.="  ORDER BY ventas_en_periodo desc, dinero_movido desc"; }
-      else{ $queryText.="  ORDER BY dinero_movido desc, ventas_en_periodo desc"; }
+      if(self::$criterio_ordenamiento=="ventas_periodo"){ $queryText.="  ORDER BY ventas_periodo desc, dinero_movido desc"; }
+      else{ $queryText.="  ORDER BY dinero_movido desc, ventas_periodo desc"; }
 
       $queryText.="  limit 30;"  ;
 
@@ -95,25 +175,14 @@
       $searchResults = [];
       foreach ($result as $row)
       {
-          $producto = new Producto();
-
-          $producto->product_id = $row["product_id"];
-
-          $producto->url = $row["url"];
-          $producto->categoria = new Categoria($row["categoria"]);
-        	$producto->titulo = $row["titulo"];
-          $producto->precio = $row["precio"];
-          $producto->localidad  = $row["localidad"];
-          $producto->inicio_periodo = $row["inicio_periodo"];
-          $producto->fin_periodo = $row["fin_periodo"];
-          $producto->ventas_en_periodo= $row["ventas_en_periodo"];
-          $producto->dias_periodo = $row["periodo_en_dias"];
-          $producto->dinero_movido = $row["dinero_movido"];
-
-          $searchResults[]=$producto;
+        $producto = new Producto();
+        $producto->loadFromArray($row);
+        $searchResults[]=$producto;
       }
       return $searchResults;
     }
+
+
 
     // devuelve un array con querys sql para importar el temporal.csv
     private function importQuery(){
@@ -144,7 +213,7 @@
 
 
       //--  importo datos del csv crudo del scrapper
-      $importQuery[] ="LOAD DATA INFILE '/opt/lampp/htdocs/scraper/imports/temp-import.csv'
+      $importQuery[] ="LOAD DATA INFILE '/opt/lampp/htdocs/scraper-test/imports/temp-import.csv'
       INTO TABLE temporal
       CHARACTER SET UTF8
       FIELDS TERMINATED BY ','
@@ -268,59 +337,6 @@
 
 
 
-    // Tomo mejores vendidos por categoria de la cache.
-    static public function bestSellers(int $categoria_id)
-    {
-      $DB=DataBase::conect();
-
-      $queryText = "SELECT product_id,categoria_id,url, localidad, titulo, precio, inicio_periodo, fin_periodo,dias_periodo, ventas_periodo, dinero_movido,favorito
-      FROM cache_bestSellers
-      WHERE criterio = :criterio
-      AND categoria_id = :categoria
-      "
-      ;
-
-      if (trim(self::$criterio_ordenamiento)=="ventas_periodo"){
-        $queryText.=' ORDER BY ventas_periodo desc, dinero_movido desc ';
-      }else{
-        $queryText.=' ORDER BY dinero_movido desc, ventas_periodo desc ';
-      }
-
-        try
-        {
-          $query= $DB->prepare($queryText);
-          $query->bindValue(':criterio',self::$criterio_ordenamiento,PDO::PARAM_STR);
-          $query->bindValue(':categoria',$categoria_id,PDO::PARAM_INT);
-
-          $query->execute();
-          $result = $query->fetchAll(PDO::FETCH_ASSOC);
-
-        }
-        catch (PDOException $e)
-        {
-          return "ERROR --> ".$e->getMessage();
-        }
-        $bestSellers=[];
-        foreach ($result as $row)
-        {
-          $producto = new producto();
-          $producto->product_id = $row["product_id"];
-          $producto->categoria =new Categoria($row["categoria_id"]);
-        	$producto->titulo =$row["titulo"];
-          $producto->url =$row["url"];
-          $producto->precio =$row["precio"];
-          $producto->localidad =$row["localidad"];
-          $producto->inicio_periodo =$row["inicio_periodo"];
-          $producto->fin_periodo =  $row["fin_periodo"];
-          $producto->ventas_en_periodo =$row["ventas_periodo"];
-          $producto->dias_periodo =$row["dias_periodo"];
-          $producto->dinero_movido =$row["dinero_movido"];
-          $producto->EsFavorito = $row["favorito"];
-
-          $bestSellers[]=$producto;
-        }
-        return $bestSellers;
-    }
 
 
     //borra el ultimo insert
@@ -368,10 +384,27 @@
     public $dias_periodo;
     public $dinero_movido;
     public $ventas_total;
-    public $ventas_en_periodo;
+    public $ventas_periodo;
     public $EsFavorito=0;
 
 
+    // doy un array con campos de producto y lo meto a un objeto productos.
+    public function loadFromArray($array)
+    {
+
+      $this->product_id = $array["product_id"];
+      $this->url = $array["url"];
+      $this->categoria = new Categoria($array["categoria"]);
+      $this->titulo = $array["titulo"];
+      $this->precio = $array["precio"];
+      $this->localidad  = $array["localidad"];
+      $this->inicio_periodo = $array["inicio_periodo"];
+      $this->fin_periodo = $array["fin_periodo"];
+      $this->ventas_periodo= $array["ventas_periodo"];
+      $this->dias_periodo = $array["dias_periodo"];
+      $this->dinero_movido = $array["dinero_movido"];
+      $this->EsFavorito = $array["favorito"];
+    }
 
     public function __construct($product_id=0)
     {
@@ -395,7 +428,7 @@
         $this->dias_periodo="";
         $this->dinero_movido="";
         $this->ventas_total="";
-        $this->ventas_en_periodo="";
+        $this->ventas_periodo="";
 
 
       }
@@ -480,7 +513,7 @@
         $queryText = 'SELECT
             product_id,
             MAX(sells) - MIN(sells) AS ventas_total,
-            CONCAT(TIMESTAMPDIFF(DAY, MIN(data_date), MAX(data_date))," dias")  AS dias_periodo,
+            CONCAT(TIMESTAMPDIFF(DAY, MIN(s.data_date), MAX(s.data_date))," dias")  AS dias_periodo,
             (MAX(sells) - MIN(sells)) * price AS dinero_movido
         FROM scrapes AS s
         where s.product_id = :product_id_param
@@ -515,7 +548,7 @@
         s.location AS localidad
         FROM scrapes s
         WHERE trim(product_id) LIKE trim(:product_id_param)
-        ORDER BY data_date';
+        ORDER BY s.data_date';
 
         try {
             $query = $DB->prepare($queryText);
